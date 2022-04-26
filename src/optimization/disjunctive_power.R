@@ -41,10 +41,13 @@ loss <- function(w, alpha=ALPHA, mp=MP) {
   -disjunctive_power(w=w, alpha=alpha, mp=mp)
 }
 
-loss_d <- function(w, k, alpha=ALPHA, mp=MP) {
+loss_d <- function(w, k, alpha=ALPHA, mp=MP, min.w=1e-8) {
   n = length(mp)
   stopifnot(length(w) == n)
   stopifnot(k <= n)
+  if (w[k] <= min.w) {
+    w[k] = min.w
+  }
   etas = c()
   for (p in mp) {
     etas = c(etas, solve_eta(alpha=alpha, p=p))
@@ -146,10 +149,13 @@ inverse_derivative <- function(w, alpha, i) {
   -alpha / dnorm(qnorm(1-w[i]*alpha))
 }
 
-loss_d_corr <- function(w, k, alpha=ALPHA, mp=MP, rho=RHO) {
+loss_d_corr <- function(w, k, alpha=ALPHA, mp=MP, rho=RHO, min.w=1e-8) {
   n = length(mp)
   stopifnot(length(w) == n)
   stopifnot(k <= n)
+  if (w[k] <= min.w) {
+    w[k] = min.w
+  }
   mus = c()
   for (p in mp) {
     mus = c(mus, solve_mu(alpha=alpha, p=p))
@@ -197,7 +203,8 @@ optim_w <- function(alpha, mp, initial_w=NULL, lb=NULL, ub=NULL, rho=NULL, optim
   # Optimize non zeros w's
   n.hypo.p = length(mp.p)
   if (is.null(lb)) {
-    lb = rep(1e-8, n.hypo.p)
+    # lb = rep(1e-8, n.hypo.p)
+    lb = rep(0, n.hypo.p)
   }
   if (is.null(ub)) {
     ub = rep(1, n.hypo.p)
