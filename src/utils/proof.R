@@ -46,12 +46,23 @@ points(rhos, dp)
 abline(h=0.9)
 
 w = seq(0, 1, by=0.01)
-g_2w_corr <- function(w, mp=c(0.7, 0.8), alpha=0.025, rho=0.9) {
+g_2w_corr <- function(w, mp=c(0.8, 0.8), alpha=0.025, rho=0.9) {
   disjunctive_power_corr(w=c(w, 1-w), alpha = alpha, mp = mp, rho = rho)
 }
 
 dpc = c()
 for (weight in w) {
-  dpc = c(dpc, g_2w_corr(weight, rho=0.5))
+  dpc = c(dpc, g_2w_corr(weight, rho=0.79))
 }
 plot(w, dpc)
+
+
+p_rho_2 <- function(p, rhos=seq(0, 1, by=0.01), n=2, alpha=0.025) {
+  C.alpha = qnorm(1-1/n*alpha) - qnorm(1-alpha)
+  p_rhos =c()
+  for (rho in rhos) {
+    p_rhos = c(p_rhos, 1/(1+rho)*qnorm(p*(1+rho)*sqrt(2*pi*(1-rho^2))) - qnorm(1-p))
+  }
+  plot(rhos, p_rhos)
+  abline(h=C.alpha)
+}
