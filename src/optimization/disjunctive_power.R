@@ -185,7 +185,7 @@ eqn_grad_corr <- function(w, alpha, mp, rho) {
 # Optimization of w
 opts <- list("algorithm" = "NLOPT_LD_SLSQP",
              "xtol_rel" = 0,
-             "maxeval" = 10000)
+             "maxeval" = 1e5)
 
 optim_w <- function(alpha, mp, initial_w=NULL, lb=NULL, ub=NULL, rho=NULL, optim_opts=opts, constraint.w=NULL) {
   # Filter non-zeros marginal power
