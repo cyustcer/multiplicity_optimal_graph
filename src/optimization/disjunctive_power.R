@@ -1,5 +1,6 @@
 # Import libraries
 library(mvtnorm)
+library(tidyverse)
 library(nloptr)
 
 ########################
@@ -37,7 +38,7 @@ disjunctive_power <- function(w=c(0.5, 0.5), alpha=0.025, mp=c(0.9, 0.9)) {
   1 - fail
 }
 
-loss <- function(w, alpha=ALPHA, mp=MP) {
+loss <- function(w, alpha=ALPHA, mp=MP, min.w=1e-8) {
   -disjunctive_power(w=w, alpha=alpha, mp=mp)
 }
 
@@ -64,12 +65,12 @@ loss_d <- function(w, k, alpha=ALPHA, mp=MP, min.w=1e-8) {
   derivative
 }
 
-loss_grad <- function(w, alpha=ALPHA, mp=MP) {
+loss_grad <- function(w, alpha=ALPHA, mp=MP, min.w=1e-8) {
   n = length(mp)
   stopifnot(length(w) == n)
   grad = c()
   for (k in 1:n) {
-    grad = c(grad, loss_d(w, k, alpha=alpha, mp=mp))
+    grad = c(grad, loss_d(w, k, alpha=alpha, mp=mp, min.w=min.w))
   }
   grad
 }
@@ -128,7 +129,7 @@ disjunctive_power_corr <- function(w=c(0.5, 0.5), alpha=0.025, mp=c(0.9, 0.9), r
   power_corr(mus=mus, Sigma=Sigma, alphas=alpha*w)
 }
 
-loss_corr <- function(w, alpha=ALPHA, mp=MP, rho=RHO) {
+loss_corr <- function(w, alpha=ALPHA, mp=MP, rho=RHO, min.w=1e-8) {
   -disjunctive_power_corr(w, alpha=alpha, mp=mp, rho=rho)
 }
 
@@ -169,21 +170,21 @@ loss_d_corr <- function(w, k, alpha=ALPHA, mp=MP, rho=RHO, min.w=1e-8) {
   derivative
 }
 
-loss_grad_corr <- function(w, alpha=ALPHA, mp=MP, rho=RHO) {
+loss_grad_corr <- function(w, alpha=ALPHA, mp=MP, rho=RHO, min.w=1e-8) {
   n = length(mp)
   stopifnot(length(w) == n)
   grad = c()
   for (k in 1:n) {
-    grad = c(grad, loss_d_corr(w, k, alpha=alpha, mp=mp, rho=rho))
+    grad = c(grad, loss_d_corr(w, k, alpha=alpha, mp=mp, rho=rho, min.w=min.w))
   }
   grad
 }
 
-eqn_corr <- function(w, alpha, mp, rho) {
+eqn_corr <- function(w, alpha, mp, rho, min.w=1e-8) {
   return(c(sum(w)-1))
 }
 
-eqn_grad_corr <- function(w, alpha, mp, rho) {
+eqn_grad_corr <- function(w, alpha, mp, rho, min.w=1e-8) {
   return(rep(1, length(w)))
 }
 
@@ -193,7 +194,10 @@ opts <- list("algorithm" = "NLOPT_LD_SLSQP",
              "xtol_rel" = 0,
              "maxeval" = 1e5)
 
-optim_w <- function(alpha, mp, initial_w=NULL, lb=NULL, ub=NULL, rho=NULL, optim_opts=opts, constraint.w=NULL) {
+optim_w <- function(alpha, mp, rho=NULL,
+                    initial_w=NULL, constraint.w=NULL,
+                    lb=NULL, ub=NULL, min.w=1e-8,
+                    optim_opts=opts) {
   # Filter non-zeros marginal power
   if (is.null(constraint.w)) {
     constraint.w = rep(NA, length(mp))
@@ -220,7 +224,7 @@ optim_w <- function(alpha, mp, initial_w=NULL, lb=NULL, ub=NULL, rho=NULL, optim
                   eval_f=loss,
                   eval_grad_f = loss_grad,
                   alpha=alpha, mp=mp.p,
-                  lb=lb, ub=ub,
+                  lb=lb, ub=ub, min.w=min.w,
                   eval_g_eq = eqn,
                   eval_jac_g_eq = eqn_grad,
                   opts=optim_opts)
@@ -230,7 +234,7 @@ optim_w <- function(alpha, mp, initial_w=NULL, lb=NULL, ub=NULL, rho=NULL, optim
                   eval_f=loss_corr,
                   eval_grad_f = loss_grad_corr,
                   alpha=alpha, mp=mp.p, rho=rho,
-                  lb=lb, ub=ub,
+                  lb=lb, ub=ub, min.w=min.w,
                   eval_g_eq = eqn_corr,
                   eval_jac_g_eq = eqn_grad_corr,
                   opts=opts)
@@ -240,4 +244,40 @@ optim_w <- function(alpha, mp, initial_w=NULL, lb=NULL, ub=NULL, rho=NULL, optim
   w[constraint.w != 0 | is.na(constraint.w)] = w.p
   return(list(w = w,
               optima = res))
+}
+
+create_initial_ws <- function(n) {
+  cand.ws <- NULL
+  for (i in 1:n) {
+    cand = list(c(0, 1))
+    names(cand) = paste0("w", i)
+    cand.ws <- c(cand.ws, cand)
+  }
+  initial.ws <- cand.ws %>% expand.grid()
+  initial.ws = initial.ws[rowSums(initial.ws) != 0, ]
+  initial.ws = initial.ws / rowSums(initial.ws)
+  row.names(initial.ws) <- NULL
+  initial.ws
+}
+
+go_optim_w <- function(alpha, mp, rho=NULL,
+                       constraint.w=NULL, lb=NULL, ub=NULL,
+                       min.w=1e-8, optim_opts=opts) {
+  n = length(mp)
+  initial.ws = create_initial_ws(n)
+  N = nrow(initial.ws)
+  optimas <- data.frame(matrix(ncol = n+1, nrow = 0))
+  colnames(optimas) <- c(colnames(initial.ws), 'optimal_value')
+  for (i in 1:N) {
+    initial.w = as.matrix(initial.ws)[i, ]
+    res = optim_w(alpha=alpha, mp=mp, rho=rho,
+                  initial_w=initial.w, constraint.w=constraint.w,
+                  lb=lb, ub=ub, min.w=min.w,
+                  optim_opts=optim_opts)
+    # optimal.w = round(res$w, digits=pcs.digits)
+    optimal.w = res$w
+    optimal.value = -res$optima$objective
+    optimas[i, ] <- c(optimal.w, optimal.value)
+  }
+  optimas %>% arrange(desc(optimal_value))
 }
