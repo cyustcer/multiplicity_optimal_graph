@@ -284,4 +284,5 @@ go_optim_w <- function(alpha, mp, rho=NULL,
 }
 
 # approximate view
-optimas %>% mutate(across(w1:w6, ~round(.x, digits=3)))
+optimas = go_optim_w(alpha=0.025, mp=rep(0.8, 5), rho=0.78)
+optimas %>% mutate(across(head(colnames(optimas), -1), ~round(.x, digits=3)))
