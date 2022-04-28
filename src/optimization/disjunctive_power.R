@@ -270,6 +270,7 @@ go_optim_w <- function(alpha, mp, rho=NULL,
   colnames(optimas) <- c(colnames(initial.ws), 'optimal_value')
   for (i in 1:N) {
     initial.w = as.matrix(initial.ws)[i, ]
+    # print(initial.w)
     res = optim_w(alpha=alpha, mp=mp, rho=rho,
                   initial_w=initial.w, constraint.w=constraint.w,
                   lb=lb, ub=ub, min.w=min.w,
@@ -281,3 +282,6 @@ go_optim_w <- function(alpha, mp, rho=NULL,
   }
   optimas %>% arrange(desc(optimal_value))
 }
+
+# approximate view
+optimas %>% mutate(across(w1:w6, ~round(.x, digits=3)))
