@@ -246,25 +246,40 @@ optim_w <- function(alpha, mp, rho=NULL,
               optima = res))
 }
 
-create_initial_ws <- function(n) {
+create_initial_ws <- function(constraint.w) {
+  n = length(constraint.w)
+  remain.ws = 1 - sum(constraint.w, na.rm=T)
   cand.ws <- NULL
   for (i in 1:n) {
-    cand = list(c(0, 1))
-    names(cand) = paste0("w", i)
-    cand.ws <- c(cand.ws, cand)
+    if (is.na(constraint.w[i])) {
+      cand = list(c(0, 1))
+      names(cand) = paste0("w", i)
+      cand.ws <- c(cand.ws, cand)
+    }
+    else {
+      cand = list(c(constraint.w[i]))
+    }
   }
   initial.ws <- cand.ws %>% expand.grid()
-  initial.ws = initial.ws[rowSums(initial.ws) != 0, ]
-  initial.ws = initial.ws / rowSums(initial.ws)
+  initial.ws = initial.ws[rowSums(initial.ws) != 0, , drop=F]
+  initial.ws = initial.ws / rowSums(initial.ws) * remain.ws
   row.names(initial.ws) <- NULL
-  initial.ws
+  for (i in 1:n) {
+    if (!is.na(constraint.w[i])) {
+      initial.ws[paste0("w", i)] = constraint.w[i]
+    }
+  }
+  initial.ws %>% select(sort(names(initial.ws)))
 }
 
 go_optim_w <- function(alpha, mp, rho=NULL,
                        constraint.w=NULL, lb=NULL, ub=NULL,
                        min.w=1e-8, optim_opts=opts) {
   n = length(mp)
-  initial.ws = create_initial_ws(n)
+  if (is.null(constraint.w)) {
+    constraint.w = rep(NA, n)
+  }
+  initial.ws = create_initial_ws(constraint.w)
   N = nrow(initial.ws)
   optimas <- data.frame(matrix(ncol = n+1, nrow = 0))
   colnames(optimas) <- c(colnames(initial.ws), 'optimal_value')
