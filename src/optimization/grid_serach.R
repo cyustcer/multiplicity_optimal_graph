@@ -56,8 +56,7 @@ search_2_uneq <- function(x, scen) {
 }
 
 # Parallel
-library(future.apply)
-plan(multisession)
+plan(cluster)
 # 2 hypotheses with equal marginal power
 start <- proc.time()
 result <- future_lapply(1:2, FUN = search_2_eq, future.seed = TRUE,
@@ -75,7 +74,6 @@ data <- as.data.frame(do.call(rbind, result))
 write.csv(data, file="dp_2_uneq.csv")
 
 # Example call
-setwd("C:/Users/dxi1/OneDrive - Gilead Sciences/Paper/Optimal graph/code")
 data <- read.csv("dp_2_eq.csv")
 mp_1 <- 0.9
 mp_2 <- 0.9
@@ -86,7 +84,6 @@ subset(temp, w1 %in% c(0, 0.5, 1))
 
 
 # Figure 1
-setwd("C:/Users/dxi1/OneDrive - Gilead Sciences/Paper/Optimal graph/code")
 data <- read.csv("dp_2_eq.csv")
 temp <- subset(data, mp1 == 0.9 & mp2 == 0.9 & rho %in% c(0.3, 0.6, 0.82, 0.9))
 ggplot(data = temp, aes(x = w1, y = dp)) +
@@ -101,7 +98,6 @@ ggplot(data = temp, aes(x = w1, y = dp)) +
         strip.text.x = element_text(size = 15))
 
 # Figure 2
-setwd("C:/Users/dxi1/OneDrive - Gilead Sciences/Paper/Optimal graph/code")
 data <- read.csv("dp_2_eq.csv")
 mp <- seq(0.5, 0.9, 0.1)
 data_plot <- expand.grid(rho, mp)
@@ -127,7 +123,6 @@ ggplot(data = data_plot, aes(x = rho, y = maxdp, group = as.factor(mp))) +
         legend.position = "top")
 
 # Table 3
-setwd("C:/Users/dxi1/OneDrive - Gilead Sciences/Paper/Optimal graph/code")
 data <- read.csv("dp_2_eq.csv")
 mp <- c(0.9, 0.8, 0.7)
 sigma <- c(0.9, 0.8, 0.7, 0.5)
@@ -153,7 +148,6 @@ for (i in 1:length(mp)) {
 tab
 
 # Table 4
-setwd("C:/Users/dxi1/OneDrive - Gilead Sciences/Paper/Optimal graph/code")
 data <- read.csv("dp_2_uneq.csv")
 mp <- c(0.8, 0.6, 0.3)
 sigma <- c(0.9, 0.8, 0.7, 0.5)
@@ -242,7 +236,7 @@ mp <- 0.9
 sigma <- 0.9
 scen <- list(arg, alpha, mp, sigma)
 
-plan(multisession)
+plan(cluster)
 # 3 hypotheses with equal marginal power
 start <- proc.time()
 result <- future_lapply(1:nrow(scen[[1]]), FUN = search_3_eq, future.seed = TRUE,
@@ -252,7 +246,6 @@ data <- as.data.frame(do.call(rbind, result))
 
 # Table 5
 alpha <- 0.025
-setwd("C:/Users/dxi1/OneDrive - Gilead Sciences/Paper/Optimal graph/code")
 data <- read.csv("dp_3_eq_0.9.csv")[, -1]
 sigma <- c(0.9, 0.8, 0.7, 0.5)
 tab_0.9 <- NULL
@@ -299,7 +292,6 @@ for (j in 1:length(sigma)) {
 }
 tab_0.9
 
-data <- read.csv("dp_3_eq_0.8.csv")[, -1]
 sigma <- c(0.9, 0.79, 0.7, 0.5)
 tab_0.8 <- NULL
 for (j in 1:length(sigma)) {
@@ -345,8 +337,6 @@ for (j in 1:length(sigma)) {
 }
 tab_0.8
 
-
-data <- read.csv("dp_3_eq_0.7.csv")[, -1]
 sigma <- c(0.9, 0.77, 0.7, 0.5)
 tab_0.7 <- NULL
 for (j in 1:length(sigma)) {
