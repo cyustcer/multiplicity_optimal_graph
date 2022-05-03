@@ -196,7 +196,7 @@ for (i in 1:length(sigma)) {
 }
 bench
 
-################################### 3 hypotheses
+################################### 3 hypotheses eq
 
 search_3_eq <- function(x, scen) {
   alpha <- scen[[2]]
@@ -292,6 +292,7 @@ for (j in 1:length(sigma)) {
 }
 tab_0.9
 
+data <- read.csv("dp_3_eq_0.8.csv")[, -1]
 sigma <- c(0.9, 0.79, 0.7, 0.5)
 tab_0.8 <- NULL
 for (j in 1:length(sigma)) {
@@ -337,6 +338,7 @@ for (j in 1:length(sigma)) {
 }
 tab_0.8
 
+data <- read.csv("dp_3_eq_0.7.csv")[, -1]
 sigma <- c(0.9, 0.77, 0.7, 0.5)
 tab_0.7 <- NULL
 for (j in 1:length(sigma)) {
@@ -381,3 +383,184 @@ for (j in 1:length(sigma)) {
   }
 }
 tab_0.7
+
+################################### 3 hypotheses uneq
+search_3_uneq <- function(x, scen) {
+  alpha <- scen[[2]]
+  mp <- switch(scen[[3]],
+               c(0.9, 0.75, 0.6),
+               c(0.9, 0.75, 0.3),
+               c(0.9, 0.5, 0.5)
+  )
+  sigma <- switch(scen[[4]],
+                  matrix(c(1, 0.8, 0.8, 0.8, 1, 0.8, 0.8, 0.8, 1),
+                         nrow = length(mp), ncol = length(mp)),
+                  matrix(c(1, 0.4, 0.4, 0.4, 1, 0.4, 0.4, 0.4, 1),
+                         nrow = length(mp), ncol = length(mp)),
+                  matrix(c(1, 0.8, 0.4, 0.8, 1, 0.2, 0.4, 0.2, 1),
+                         nrow = length(mp), ncol = length(mp)),
+                  matrix(c(1, 0.2, 0.4, 0.2, 1, 0.8, 0.4, 0.8, 1),
+                         nrow = length(mp), ncol = length(mp)))
+  temp <- as.numeric(scen[[1]][x, ])
+  y <- 1 - pmvnorm(upper = qnorm(1 - alpha * temp),
+                   mean = qnorm(1 - alpha) - qnorm(1 - mp),
+                   sigma = sigma,
+                   algorithm = GenzBretz(maxpts = 1e7, abseps = 1e-7, releps = 1e-7)
+  )
+  y <- matrix(c(mp, switch(scen[[4]],
+                           c(0.8, 0.8, 0.8),
+                           c(0.4, 0.4, 0.4),
+                           c(0.8, 0.4, 0.2),
+                           c(0.2, 0.4, 0.8)), temp, as.numeric(y)), nrow = 1)
+  colnames(y) <- c("mp1", "mp2", "mp3", "rho12", "rho13", "rho23", "w1", "w2", "w3", "dp")
+  return(y)
+}
+w1 <- seq(0, 1, 0.001)
+w2 <- seq(0, 1, 0.001)
+w3 <- seq(0, 1, 0.001)
+w <- expand.grid(w2, w1)
+w <- subset(w, Var1 + Var2 <= 1)
+arg <- rep(NA, 3)
+for (i in 1:nrow(w)) {
+  temp <- as.numeric(w[i, ])
+  id <- as.vector(which(sum(temp) + w3 == 1))
+  if (length(id) > 0) {
+    for (j in 1:length(id)) {
+      arg <- rbind(arg, c(temp, w3[id[j]]))
+    }
+  }
+}
+arg <- arg[-1, ]
+write.csv(arg, file="w_3.csv")
+arg <- read.csv("w_3.csv")
+alpha <- 0.025
+mp <- c(1, 2, 3)
+sigma <- c(1, 2, 3, 4)
+scen <- list(arg, alpha, mp, sigma)
+plan(cluster)
+# 3 hypotheses with unequal marginal power
+data <- NULL
+start <- proc.time()
+for (i in 1:length(sigma)) {
+  scen <- list(arg, alpha, mp = 1, sigma[i])
+  result <- future_lapply(1:nrow(scen[[1]]), FUN = search_3_uneq, future.seed = TRUE,
+                          future.packages = c("mvtnorm"), scen = scen)
+  data <- rbind(data, as.data.frame(do.call(rbind, result)))
+}
+(proc.time() - start)[3]
+# Table 5
+alpha <- 0.025
+
+data <- read.csv("dp_3_uneq_0.6.csv")[, -1]
+sigma <- c(1, 2, 3, 4)
+sigma12 <- c(0.8, 0.4, 0.8, 0.2)
+sigma13 <- c(0.8, 0.4, 0.4, 0.4)
+tab_0.6 <- NULL
+for (j in 1:length(sigma)) {
+  temp <- subset(data, abs(rho12 - sigma12[j]) < 1e-7 & abs(rho13 - sigma13[j]) < 1e-7)
+  x <- temp[order(-temp$dp), ][1, ]
+  x[length(x)] <- round(100 * x[length(x)], 3)
+  tab_0.6 <- rbind(tab_0.6, x)
+}
+tab_0.6
+
+bench <- NULL
+for (j in 1:length(sigma)) {
+  cr <- switch(j,
+               matrix(c(1, 0.8, 0.8, 0.8, 1, 0.8, 0.8, 0.8, 1),
+                      nrow = 3, ncol = 3),
+               matrix(c(1, 0.4, 0.4, 0.4, 1, 0.4, 0.4, 0.4, 1),
+                      nrow = 3, ncol = 3),
+               matrix(c(1, 0.8, 0.4, 0.8, 1, 0.2, 0.4, 0.2, 1),
+                      nrow = 3, ncol = 3),
+               matrix(c(1, 0.2, 0.4, 0.2, 1, 0.8, 0.4, 0.8, 1),
+                      nrow = 3, ncol = 3))
+  temp <- c(0.5362814, 0.2994315, 0.1642871)
+  y <- 1 - pmvnorm(upper = qnorm(1 - alpha * temp),
+                   mean = qnorm(1 - alpha) - qnorm(1 - c(0.9, 0.75, 0.6)),
+                   sigma = cr,
+                   algorithm = GenzBretz(maxpts = 1e7, abseps = 1e-7, releps = 1e-7)
+  )
+  y <- matrix(c(c(0.9, 0.75, 0.6), switch(j,
+                           c(0.8, 0.8, 0.8),
+                           c(0.4, 0.4, 0.4),
+                           c(0.8, 0.4, 0.2),
+                           c(0.2, 0.4, 0.8)), round(temp, 3), round(100 * as.numeric(y), 3)), nrow = 1)
+  colnames(y) <- c("mp1", "mp2", "mp3", "rho12", "rho13", "rho23", "w1", "w2", "w3", "dp")
+  bench <- rbind(bench, y)
+}
+bench
+
+data <- read.csv("dp_3_uneq_0.3.csv")[, -1]
+tab_0.3 <- NULL
+for (j in 1:length(sigma)) {
+  temp <- subset(data, abs(rho12 - sigma12[j]) < 1e-7 & abs(rho13 - sigma13[j]) < 1e-7)
+  x <- temp[order(-temp$dp), ][1, ]
+  x[length(x)] <- round(100 * x[length(x)], 3)
+  tab_0.3 <- rbind(tab_0.3, x)
+}
+tab_0.3
+
+bench <- NULL
+for (j in 1:length(sigma)) {
+  cr <- switch(j,
+               matrix(c(1, 0.8, 0.8, 0.8, 1, 0.8, 0.8, 0.8, 1),
+                      nrow = 3, ncol = 3),
+               matrix(c(1, 0.4, 0.4, 0.4, 1, 0.4, 0.4, 0.4, 1),
+                      nrow = 3, ncol = 3),
+               matrix(c(1, 0.8, 0.4, 0.8, 1, 0.2, 0.4, 0.2, 1),
+                      nrow = 3, ncol = 3),
+               matrix(c(1, 0.2, 0.4, 0.2, 1, 0.8, 0.4, 0.8, 1),
+                      nrow = 3, ncol = 3))
+  temp <- c(0.6257586, 0.3531397, 0.02110176)
+  y <- 1 - pmvnorm(upper = qnorm(1 - alpha * temp),
+                   mean = qnorm(1 - alpha) - qnorm(1 - c(0.9, 0.75, 0.3)),
+                   sigma = cr,
+                   algorithm = GenzBretz(maxpts = 1e7, abseps = 1e-7, releps = 1e-7)
+  )
+  y <- matrix(c(c(0.9, 0.75, 0.3), switch(j,
+                           c(0.8, 0.8, 0.8),
+                           c(0.4, 0.4, 0.4),
+                           c(0.8, 0.4, 0.2),
+                           c(0.2, 0.4, 0.8)), round(temp, 3), round(100 * as.numeric(y), 3)), nrow = 1)
+  colnames(y) <- c("mp1", "mp2", "mp3", "rho12", "rho13", "rho23", "w1", "w2", "w3", "dp")
+  bench <- rbind(bench, y)
+}
+bench
+
+data <- read.csv("dp_3_uneq_0.5.csv")[, -1]
+tab_0.5 <- NULL
+for (j in 1:length(sigma)) {
+  temp <- subset(data, abs(rho12 - sigma12[j]) < 1e-7 & abs(rho13 - sigma13[j]) < 1e-7)
+  x <- temp[order(-temp$dp), ][1, ]
+  x[length(x)] <- round(100 * x[length(x)], 3)
+  tab_0.5 <- rbind(tab_0.5, x)
+}
+tab_0.5
+
+bench <- NULL
+for (j in 1:length(sigma)) {
+  cr <- switch(j,
+               matrix(c(1, 0.8, 0.8, 0.8, 1, 0.8, 0.8, 0.8, 1),
+                      nrow = 3, ncol = 3),
+               matrix(c(1, 0.4, 0.4, 0.4, 1, 0.4, 0.4, 0.4, 1),
+                      nrow = 3, ncol = 3),
+               matrix(c(1, 0.8, 0.4, 0.8, 1, 0.2, 0.4, 0.2, 1),
+                      nrow = 3, ncol = 3),
+               matrix(c(1, 0.2, 0.4, 0.2, 1, 0.8, 0.4, 0.8, 1),
+                      nrow = 3, ncol = 3))
+  temp <- c(0.7150386, 0.1424807, 0.1424807)
+  y <- 1 - pmvnorm(upper = qnorm(1 - alpha * temp),
+                   mean = qnorm(1 - alpha) - qnorm(1 - c(0.9, 0.5, 0.5)),
+                   sigma = cr,
+                   algorithm = GenzBretz(maxpts = 1e7, abseps = 1e-7, releps = 1e-7)
+  )
+  y <- matrix(c(c(0.9, 0.5, 0.5), switch(j,
+                           c(0.8, 0.8, 0.8),
+                           c(0.4, 0.4, 0.4),
+                           c(0.8, 0.4, 0.2),
+                           c(0.2, 0.4, 0.8)), round(temp, 3), round(100 * as.numeric(y), 3)), nrow = 1)
+  colnames(y) <- c("mp1", "mp2", "mp3", "rho12", "rho13", "rho23", "w1", "w2", "w3", "dp")
+  bench <- rbind(bench, y)
+}
+bench
