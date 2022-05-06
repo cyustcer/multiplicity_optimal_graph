@@ -11,15 +11,6 @@ power <- function(alpha, eta=2.5) {
   1 - pnorm(qnorm(1-alpha) - eta)
 }
 
-
-# solve_eta <- function(alpha, p) {
-#   equation <- function(alpha, eta) {
-#     power(alpha, eta) - p
-#   }
-#   root = uniroot(equation, alpha=alpha, lower=-1000, upper=1000)$root
-#   root
-# }
-
 solve_eta <- function(alpha, p) {
   qnorm(1-alpha) - qnorm(1-p)
 }
@@ -75,11 +66,11 @@ loss_grad <- function(w, alpha=ALPHA, mp=MP, min.w=1e-8) {
   grad
 }
 
-eqn <- function(w, alpha, mp) {
-  return(c(sum(w)-1))
+eqn <- function(w, alpha, mp, min.w) {
+  return(sum(w)-1.)
 }
 
-eqn_grad <- function(w, alpha, mp) {
+eqn_grad <- function(w, alpha, mp, min.w) {
   return(rep(1, length(w)))
 }
 
@@ -92,17 +83,9 @@ power_corr <- function(mus, Sigma, alphas) {
   for (alpha in alphas) {
     zs = c(zs, qnorm(1-alpha))
   }
+  set.seed(2022)
   1 - pmvnorm(upper=zs, mean=mus, sigma=Sigma)
 }
-
-# solve_mu <- function(alpha, p) {
-#   equation <- function(alpha, mu) {
-#     z = qnorm(1-alpha)
-#     1 - pnorm(z, mean=mu) - p
-#   }
-#   root = uniroot(equation, alpha=alpha, lower=-1000, upper=1000)$root
-#   root
-# }
 
 solve_mu <- function(alpha, p) {
   qnorm(1-alpha) - qnorm(1-p)
@@ -137,6 +120,7 @@ conditional_distribution <- function(z, i, mus, Sigma) {
   mus_i = mus[-i] + Sigma[-i, i] * (z[i]-mus[i])
   Sigma_i = Sigma[-i, -i] - Sigma[-i, i] %*% t(Sigma[i, -i])
   z_i = z[-i]
+  set.seed(2022)
   pmvnorm(upper=z_i, mean=as.vector(mus_i), sigma=Sigma_i)
 }
 
@@ -181,7 +165,7 @@ loss_grad_corr <- function(w, alpha=ALPHA, mp=MP, rho=RHO, min.w=1e-8) {
 }
 
 eqn_corr <- function(w, alpha, mp, rho, min.w=1e-8) {
-  return(c(sum(w)-1))
+  return(sum(w)-1.)
 }
 
 eqn_grad_corr <- function(w, alpha, mp, rho, min.w=1e-8) {
@@ -189,10 +173,13 @@ eqn_grad_corr <- function(w, alpha, mp, rho, min.w=1e-8) {
 }
 
 
-# Optimization of w
+#########################
+### Optimization of w ###
+#########################
+
 opts <- list("algorithm" = "NLOPT_LD_SLSQP",
              "xtol_rel" = 0,
-             "maxeval" = 1e5)
+             "maxeval" = 1e4)
 
 optim_w <- function(alpha, mp, rho=NULL,
                     initial_w=NULL, constraint.w=NULL,
@@ -274,15 +261,16 @@ create_initial_ws <- function(constraint.w) {
 
 go_optim_w <- function(alpha, mp, rho=NULL,
                        constraint.w=NULL, lb=NULL, ub=NULL,
-                       min.w=1e-8, optim_opts=opts) {
+                       min.w=1e-12, optim_opts=opts) {
   n = length(mp)
   if (is.null(constraint.w)) {
     constraint.w = rep(NA, n)
   }
   initial.ws = create_initial_ws(constraint.w)
   N = nrow(initial.ws)
-  optimas <- data.frame(matrix(ncol = n+1, nrow = 0))
-  colnames(optimas) <- c(colnames(initial.ws), 'optimal_value')
+  optimas <- data.frame(matrix(ncol = 2*n+1, nrow = 0))
+  colnames(optimas) <- c(paste0('initial ', colnames(initial.ws)), 
+                         colnames(initial.ws), 'optimal_value')
   for (i in 1:N) {
     initial.w = as.matrix(initial.ws)[i, ]
     # print(initial.w)
@@ -293,11 +281,19 @@ go_optim_w <- function(alpha, mp, rho=NULL,
     # optimal.w = round(res$w, digits=pcs.digits)
     optimal.w = res$w
     optimal.value = -res$optima$objective
-    optimas[i, ] <- c(optimal.w, optimal.value)
+    optimas[i, ] <- c(initial.w, optimal.w, optimal.value)
   }
   optimas %>% arrange(desc(optimal_value))
 }
 
 # approximate view
-optimas = go_optim_w(alpha=0.025, mp=rep(0.8, 5), rho=0.78)
-optimas %>% mutate(across(head(colnames(optimas), -1), ~round(.x, digits=3)))
+if (!interactive()) {
+  optimas = go_optim_w(alpha=0.025, mp=rep(0.8, 5), rho=0.78)
+  optimas %>% mutate(across(head(colnames(optimas), -1), ~round(.x, digits=3)))
+  
+  Sigma.1 = matrix(c(1, 0.8, 0.6, 0.4, 
+                     0.8, 1, 0.6, 0.4,
+                     0.6, 0.6, 1, 0.4,
+                     0.4, 0.4, 0.4, 1), nrow=4)
+  optimas = go_optim_w(alpha=0.025, mp=rep(0.9, 4), rho=Sigma.1)
+}
