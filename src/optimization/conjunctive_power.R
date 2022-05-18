@@ -1,70 +1,153 @@
-source(here::here("src/optimization/disjunctive_power.R"))
+# Import libraries
+library(mvtnorm)
+library(tidyverse)
+library(nloptr)
 
-optim_G <- function(alpha, mp, w) {
-  n.hypo = length(mp)
-  optim.G = diag(0, n.hypo)
-  for (i in 1:n.hypo) {
-    w.prime = optim_w(alpha, mp[-i], lb=w[-i])$w
-    optim.G[i, -i] = (w.prime - w[-i])/w[i]
+#######################
+### Correlated Case ###
+#######################
+
+power_corr <- function(mus, Sigma, alphas) {
+  zs = c()
+  for (alpha in alphas) {
+    zs = c(zs, qnorm(1-alpha))
   }
-  return(optim.G)
+  set.seed(2022)
+  pmvnorm(lower=zs, mean=mus, sigma=Sigma)
 }
 
+solve_mu <- function(alpha, p) {
+  qnorm(1-alpha) - qnorm(1-p)
+}
 
-optim_G_constrain <- function(alpha, mp, w, constraint.G=NULL, tolerance=1e-6) {
-  n.hypo = length(mp)
-  optim.G = diag(0, n.hypo)
-  if (is.null(constraint.G)) {
-    optim.G = optim_G(alpha, mp, w)
+sigma_matrix <- function(rho, n) {
+  sigma = matrix(rho, n, n)
+  diag(sigma) = 1
+  sigma
+}
+
+conjunctive_power_corr <- function(w=c(0.5, 0.5), alpha=0.025, mp=rep(0.9, 2), rho=0) {
+  n = length(mp)
+  mus = c()
+  for (p in mp) {
+    mus = c(mus, solve_mu(alpha=alpha, p=p))
+  }
+  if (length(rho) == 1) {
+    Sigma = sigma_matrix(rho, n)
   }
   else {
-    stopifnot(dim(constraint.G)==c(n.hypo, n.hypo))
-    for (i in 1:n.hypo) {
-      stopifnot(sum(constraint.G[i, ], na.rm=T) <= 1)
-      # Check if row sum up to 1 already
-      if (sum(constraint.G[i, ], na.rm=T) == 1) {
-        optim.G[i, ] = constraint.G[i, ]
-        optim.G[i, is.na(optim.G[i, ])] = 0
-        next
-      }
-      # Check if row is well defined
-      if (sum(is.na(constraint.G[i, ])) == 0) {
-        stopifnot(sum(constraint.G[i, ]) == 1)
-        optim.G[i, ] = constraint.G[i, ]
-        next
-      }
-      if (sum(is.na(constraint.G[i, ])) == 1) {
-        optim.G[i, ] = constraint.G[i, ]
-        constraint.G[i, is.na(constraint.G[i, ])] = 1 - sum(constraint.G[i, ], na.rm=T)
-        next
-      }
-      # Optimize w constraint
-      lb = w[-i]
-      ub = rep(1, n.hypo-1)
-      constraint.w = constraint.G[i, -i]
-      if (sum(lb == 0) > 0) {
-        if (sum(lb) == 1) {
-          constraint.w[lb == 0] = 0
-        }
-        else {
-          lb[lb == 0] = 1e-6
-        }
-        lb = lb[is.na(constraint.w) | constraint.w != 0]
-        ub = ub[is.na(constraint.w) | constraint.w != 0]
-      }
-      else {
-        constraint.w = rep(NA, n.hypo-1)
-      }
-      if (w[i] == 0) {
-        w[i] = tolerance
-      }
-      # print(lb)
-      # print(ub)
-      # print(constraint.w)
-      w.prime = optim_w(alpha, mp[-i], lb=lb, ub=ub, constraint.w=constraint.w)$w
-      # print(w.prime)
-      optim.G[i, -i] = (w.prime - w[-i])/w[i]
-    }
+    Sigma = rho
   }
-  return(optim.G)
+  power_corr(mus=mus, Sigma=Sigma, alphas=alpha*w)
+}
+
+loss_corr <- function(w, alpha=ALPHA, mp=MP, rho=RHO, min.w=1e-8) {
+  -conjunctive_power_corr(w, alpha=alpha, mp=mp, rho=rho)
+}
+
+conditional_distribution <- function(z, i, mus, Sigma) {
+  mus_i = mus[-i] + Sigma[-i, i] * (z[i]-mus[i])
+  Sigma_i = Sigma[-i, -i] - Sigma[-i, i] %*% t(Sigma[i, -i])
+  z_i = z[-i]
+  set.seed(2022)
+  pmvnorm(lower=z_i, mean=as.vector(mus_i), sigma=Sigma_i)
+}
+
+marginal_distribution <- function(z, i, mus) {
+  mus_i = mus[i]
+  z_i = z[i]
+  dnorm(z_i, mean=as.vector(mus_i))
+}
+
+inverse_derivative <- function(w, alpha, i) {
+  -alpha / dnorm(qnorm(1-w[i]*alpha))
+}
+
+loss_d_corr <- function(w, k, alpha=ALPHA, mp=MP, rho=RHO, min.w=1e-8) {
+  n = length(mp)
+  stopifnot(length(w) == n)
+  stopifnot(k <= n)
+  if (w[k] <= min.w) {
+    w[k] = min.w
+  }
+  mus = c()
+  for (p in mp) {
+    mus = c(mus, solve_mu(alpha=alpha, p=p))
+  }
+  zs = c()
+  for (t in w) {
+    zs = c(zs, qnorm(1-t*alpha))
+  }
+  Sigma = sigma_matrix(rho, n)
+  derivative = conditional_distribution(z=zs, i=k, mus=mus, Sigma=Sigma) * inverse_derivative(w=w, alpha=alpha, i=k) * marginal_distribution(z=zs, i=k, mus=mus)
+  derivative
+}
+
+loss_grad_corr <- function(w, alpha=ALPHA, mp=MP, rho=RHO, min.w=1e-8) {
+  n = length(mp)
+  stopifnot(length(w) == n)
+  grad = c()
+  for (k in 1:n) {
+    grad = c(grad, loss_d_corr(w, k, alpha=alpha, mp=mp, rho=rho, min.w=min.w))
+  }
+  grad
+}
+
+eqn_corr <- function(w, alpha, mp, rho, min.w=1e-8) {
+  return(sum(w)-1.)
+}
+
+eqn_grad_corr <- function(w, alpha, mp, rho, min.w=1e-8) {
+  return(rep(1, length(w)))
+}
+
+#########################
+### Optimization of w ###
+#########################
+
+opts <- list("algorithm" = "NLOPT_LD_SLSQP",
+             "xtol_rel" = 0,
+             "maxeval" = 1e4)
+
+optim_w <- function(alpha, mp, rho=NULL,
+                    initial_w=NULL, constraint.w=NULL,
+                    lb=NULL, ub=NULL, min.w=1e-8,
+                    optim_opts=opts) {
+  # Filter non-zeros marginal power
+  if (is.null(constraint.w)) {
+    constraint.w = rep(NA, length(mp))
+  }
+  mp.p = mp[constraint.w != 0 | is.na(constraint.w)]
+  constraint.p = constraint.w[constraint.w != 0 | is.na(constraint.w)]
+  # Optimize non zeros w's
+  n.hypo.p = length(mp.p)
+  if (is.null(lb)) {
+    # lb = rep(1e-8, n.hypo.p)
+    lb = rep(0, n.hypo.p)
+  }
+  if (is.null(ub)) {
+    ub = rep(1, n.hypo.p)
+  }
+  lb[!is.na(constraint.p)] = constraint.p[!is.na(constraint.p)]
+  ub[!is.na(constraint.p)] = constraint.p[!is.na(constraint.p)]
+  if (is.null(initial_w)) {
+    remain_weight = 1 - sum(lb)
+    initial_w = (ub - lb) / sum(ub - lb) * remain_weight + lb
+  }
+  if (is.null(rho)) {
+    rho = 0
+  }
+  res <- nloptr(x0=initial_w,
+                eval_f=loss_corr,
+                eval_grad_f = loss_grad_corr,
+                alpha=alpha, mp=mp.p, rho=rho,
+                lb=lb, ub=ub, min.w=min.w,
+                eval_g_eq = eqn_corr,
+                eval_jac_g_eq = eqn_grad_corr,
+                opts=opts)
+  w.p = res$solution
+  w = rep(0, length(mp))
+  w[constraint.w != 0 | is.na(constraint.w)] = w.p
+  return(list(w = w,
+              optima = res))
 }
