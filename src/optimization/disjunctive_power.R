@@ -84,7 +84,8 @@ power_corr <- function(mus, Sigma, alphas) {
     zs = c(zs, qnorm(1-alpha))
   }
   set.seed(2022)
-  1 - pmvnorm(upper=zs, mean=mus, sigma=Sigma)
+  1 - pmvnorm(upper=zs, mean=mus, sigma=Sigma, algorithm=GenzBretz(maxpts = 1e6, abseps = 1e-6, releps = 1e-6))
+  # 1 - pmvnorm(upper=zs, mean=mus, sigma=Sigma)
 }
 
 solve_mu <- function(alpha, p) {
@@ -121,7 +122,8 @@ conditional_distribution <- function(z, i, mus, Sigma) {
   Sigma_i = Sigma[-i, -i] - Sigma[-i, i] %*% t(Sigma[i, -i])
   z_i = z[-i]
   set.seed(2022)
-  pmvnorm(upper=z_i, mean=as.vector(mus_i), sigma=Sigma_i)
+  pmvnorm(upper=z_i, mean=as.vector(mus_i), sigma=Sigma_i, algorithm=GenzBretz(maxpts = 1e6, abseps = 1e-6, releps = 1e-6))
+  # pmvnorm(upper=z_i, mean=as.vector(mus_i), sigma=Sigma_i)
 }
 
 marginal_distribution <- function(z, i, mus) {
@@ -179,7 +181,7 @@ eqn_grad_corr <- function(w, alpha, mp, rho, min.w=1e-8) {
 
 opts <- list("algorithm" = "NLOPT_LD_SLSQP",
              "xtol_rel" = 0,
-             "maxeval" = 1e4)
+             "maxeval" = 1e3)
 
 optim_w <- function(alpha, mp, rho=NULL,
                     initial_w=NULL, constraint.w=NULL,
