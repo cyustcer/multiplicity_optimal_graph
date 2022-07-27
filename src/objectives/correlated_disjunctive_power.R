@@ -20,9 +20,10 @@ dpc <- function(mus, Sigma, alphas) {
   }
   set.seed(2022)
   1 - pmvnorm(upper = zs, mean = mus, sigma = Sigma,
-              algorithm = GenzBretz(maxpts = 1e6, 
-                                    abseps = 1e-6, 
-                                    releps = 1e-6))
+              algorithm = GenzBretz(maxpts = 1e6,
+                                    abseps = 1e-6,
+                                    releps = 1e-6)
+              )
 }
 
 #' A function to calculate correlated disjunctive power of
@@ -96,12 +97,14 @@ loss_dpc_d <- function(w, k, alpha, mp, rho, min.w=1e-8) {
   Sigma = sigma_matrix(rho, n)
   cd = conditional_distribution(zs, i = k, mus = mus,
                                 Sigma = Sigma)
+  set.seed(2022)
   derivative = pmvnorm(upper = zs[-k],
                        mean = cd$mean,
                        sigma = cd$covar,
                        algorithm = GenzBretz(maxpts = 1e6,
                                              abseps = 1e-6,
-                                             releps = 1e-6))
+                                             releps = 1e-6)
+                       )
   derivative = derivative * inverse_derivative(w = w,
                                                alpha = alpha,
                                                i = k)

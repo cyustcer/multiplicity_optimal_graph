@@ -91,3 +91,34 @@ eqn_corr_grad <- function(w, alpha, mp, rho, min.w) {
   return(rep(1, length(w)))
 }
 
+
+#' A function to calculate inequality constraint w.o. correlation
+#'
+#' @param w vector, weight assigned to each hypotheses
+#' @param alpha float, type I error
+#' @param mp vector of float, marginal power of each  hypotheses
+#'
+#' @return constraints
+#' @export
+ineqn <- function(w, alpha, mp, min.w) {
+  h <- numeric(2)
+  h[1] <- sum(w) - 1.
+  h[2] <- 1. - sum(w)
+  return(h)
+}
+
+
+#' A function to calculate inequality constraint w. correlation
+#'
+#' @param w vector, weight assigned to each hypotheses
+#' @param alpha float, type I error
+#' @param mp vector of float, marginal power of each  hypotheses
+#'
+#' @return constraints
+#' @export
+ineqn_corr <- function(w, alpha, mp, rho, min.w) {
+  h <- numeric(2)
+  h[1] <- sum(w) - 1.
+  h[2] <- 1. - sum(w)
+  return(h)
+}

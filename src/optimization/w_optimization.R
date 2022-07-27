@@ -31,7 +31,7 @@ create_initial_ws <- function(constraint.w) {
 
 
 opts <- list("algorithm" = "NLOPT_LD_SLSQP",
-             "xtol_rel" = 0,
+             "xtol_rel" = 1e-3,
              "maxeval" = 1e3)
 
 
@@ -60,25 +60,47 @@ optim_w_dp <- function(alpha, mp, rho=NULL,
     remain_weight = 1 - sum(lb)
     initial_w = (ub - lb) / sum(ub - lb) * remain_weight + lb
   }
-  if (is.null(rho)) {
-    res <- nloptr(x0 = initial_w,
-                  eval_f = loss_dp,
-                  eval_grad_f = loss_dp_grad,
-                  alpha = alpha, mp = mp.p,
-                  lb = lb, ub = ub, min.w = min.w,
-                  eval_g_eq = eqn,
-                  eval_jac_g_eq = eqn_grad,
-                  opts=optim_opts)
+  if (optim_opts$algorithm == "NLOPT_LN_COBYLA") {
+    if (is.null(rho)) {
+      res <- nloptr(x0 = initial_w,
+                    eval_f = loss_dp,
+                    eval_grad_f = loss_dp_grad,
+                    alpha = alpha, mp = mp.p,
+                    lb = lb, ub = ub, min.w = min.w,
+                    eval_g_ineq = ineqn,
+                    opts=optim_opts)
+    }
+    else {
+      res <- nloptr(x0=initial_w,
+                    eval_f=loss_dpc,
+                    eval_grad_f = loss_dpc_grad,
+                    alpha=alpha, mp=mp.p, rho=rho,
+                    lb=lb, ub=ub, min.w=min.w,
+                    eval_g_ineq = ineqn_corr,
+                    opts=optim_opts)
+    }
   }
   else {
-    res <- nloptr(x0=initial_w,
-                  eval_f=loss_dpc,
-                  eval_grad_f = loss_dpc_grad,
-                  alpha=alpha, mp=mp.p, rho=rho,
-                  lb=lb, ub=ub, min.w=min.w,
-                  eval_g_eq = eqn_corr,
-                  eval_jac_g_eq = eqn_corr_grad,
-                  opts=opts)
+    if (is.null(rho)) {
+      res <- nloptr(x0 = initial_w,
+                    eval_f = loss_dp,
+                    eval_grad_f = loss_dp_grad,
+                    alpha = alpha, mp = mp.p,
+                    lb = lb, ub = ub, min.w = min.w,
+                    eval_g_eq = eqn,
+                    eval_jac_g_eq = eqn_grad,
+                    opts=optim_opts)
+    }
+    else {
+      res <- nloptr(x0=initial_w,
+                    eval_f=loss_dpc,
+                    eval_grad_f = loss_dpc_grad,
+                    alpha=alpha, mp=mp.p, rho=rho,
+                    lb=lb, ub=ub, min.w=min.w,
+                    eval_g_eq = eqn_corr,
+                    eval_jac_g_eq = eqn_corr_grad,
+                    opts=optim_opts)
+    }
   }
   w.p = res$solution
   w = rep(0, length(mp))
@@ -87,6 +109,12 @@ optim_w_dp <- function(alpha, mp, rho=NULL,
               optima = res))
 }
 
+# Example
+#' Miwa always return equal split
+#' Miwa does not work for more than 5-dimension
+#' GenzBretz time variance is large
+#' GenzBretz does not return equal split
+# res <- optim_w_dp(alpha=0.025, mp=rep(0.9, 5), rho=0.6)
 
 go_optim_w_dp <- function(alpha, mp, rho=NULL,
                           constraint.w=NULL, lb=NULL, ub=NULL,
