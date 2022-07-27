@@ -1,0 +1,109 @@
+---
+title: "Optimization Algorithm"
+author: "Yao Chen"
+date: "7/25/2022"
+output:
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+
+```{r, load_source}
+source('src/optimization/w_optimization.R')
+```
+
+
+## Optimization
+
+### Define optimization options and examples
+
+```{r, optimization_options}
+opts.slsqp <- list("algorithm" = "NLOPT_LD_SLSQP",
+                   "xtol_rel" = 1e-3,
+                   "maxeval" = 1e3)
+opts.isres <- list("algorithm" = "NLOPT_GN_ISRES",
+                   "xtol_rel" = 1e-3,
+                   "maxeval" = 1e3)
+opts.cobyla <- list("algorithm" = "NLOPT_LN_COBYLA",
+                    "xtol_rel" = 1e-3,
+                    "maxeval" = 1e3)
+opts.algo <- list(opts.slsqp, opts.isres, opts.cobyla)
+```
+
+```{r, examples}
+mp.3.1 <- rep(0.9, 3)
+mp.3.2 <- rep(0.8, 3)
+mp.3.3 <- rep(0.7, 3)
+mp.3.4 <- c(0.9, 0.75, 0.6)
+mp.3.5 <- c(0.9, 0.75, 0.3)
+mp.3.6 <- c(0.9, 0.5, 0.5)
+mps <- list(mp.3.1, mp.3.2, mp.3.3, mp.3.4, mp.3.5, mp.3.6)
+
+# Correlations
+rho.3.1 <- 0.9
+rho.3.2 <- 0.8
+rho.3.3 <- 0.78
+rho.3.4 <- 0.7
+rho.3.5 <- 0.5
+rho.3.6 <- 0.4
+Sigma.3.1 <- matrix(c(1, 0.8, 0.4,
+                      0.8, 1, 0.2,
+                      0.4, 0.2, 1), nrow=3)
+Sigma.3.2 <- matrix(c(1, 0.2, 0.4,
+                      0.2, 1, 0.8,
+                      0.4, 0.8, 1), nrow=3)
+corrs <- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1, Sigma.3.2)
+```
+
+
+### Compare different algorithms
+
+#### With multiple starting points
+
+```{r, global optima algorithm comparison, warning=FALSE}
+for (mp in mps[1:3]) {
+  for (corr in corrs[1:3]) {
+    if (any(length(corr) == 1, nrow(corr) == length(mp))) {
+      cat("==================================================\n")
+      cat("marginal power: ", mp, "\n")
+      cat("correlation: ", corr, "\n")
+      cat("--------------------------------------------------\n")
+      for (opts in opts.algo) {
+        start = Sys.time()
+        res <- go_optim_w_dp(alpha=0.025, mp=mp, rho=corr, optim_opts=opts)
+        end = Sys.time()
+        cat("* Algorithm: ", opts$algorithm, "\n\t")
+        print(end - start)
+        cat("\tglobal optimal w: ", unlist(res[1, paste0("w", seq(length(mp)))]), "\n")
+        cat("\twith optimal disjunctive power: ", res[1, 'optimal_value'], "\n\n")
+      }
+    }
+  }
+}
+```
+
+#### With equaly splitted starting point
+
+```{r, local optima algorithm comparison, warning=FALSE}
+for (mp in mps[1:3]) {
+  for (corr in corrs[1:3]) {
+    if (any(length(corr) == 1, nrow(corr) == length(mp))) {
+      cat("==================================================\n")
+      cat("marginal power: ", mp, "\n")
+      cat("correlation: ", corr, "\n")
+      cat("--------------------------------------------------\n")
+      for (opts in opts.algo) {
+        start = Sys.time()
+        res <- optim_w_dp(alpha=0.025, mp=mp, rho=corr, optim_opts=opts)
+        end = Sys.time()
+        cat("* Algorithm: ", opts$algorithm, "\n\t")
+        print(end - start)
+        cat("\tlocal optimal w: ", res$w, "\n")
+        cat("\twith optimal disjunctive power: ", -res$optima$objective, "\n\n")
+      }
+    }
+  }
+}
+```
