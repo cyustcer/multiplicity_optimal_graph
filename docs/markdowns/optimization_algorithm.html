@@ -370,13 +370,17 @@ pre code {
 <ul>
 <li><a href="#define-optimization-options-and-examples">Define
 optimization options and examples</a></li>
-<li><a href="#compare-different-algorithms">Compare different
-algorithms</a></li>
+<li><a href="#compare-different-algorithms-w.-3-hypothese">Compare
+different algorithms w. 3 hypothese</a></li>
+<li><a href="#compare-different-algorithms-w.-6-hypothese">Compare
+different algorithms w. 6 hypothese</a></li>
 </ul></li>
 </ul>
 </div>
 
 <pre class="r"><code>source(&#39;src/optimization/w_optimization.R&#39;)</code></pre>
+<pre><code>## Warning in system(&quot;timedatectl&quot;, intern = TRUE): running command &#39;timedatectl&#39;
+## had status 1</code></pre>
 <pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
 <pre><code>## ✓ ggplot2 3.3.5     ✓ purrr   0.3.4
 ## ✓ tibble  3.1.5     ✓ dplyr   1.0.7
@@ -421,9 +425,37 @@ Sigma.3.2 &lt;- matrix(c(1, 0.2, 0.4,
                       0.2, 1, 0.8,
                       0.4, 0.8, 1), nrow=3)
 corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1, Sigma.3.2)</code></pre>
+<pre class="r"><code># Marginal powers
+mp.6.1 &lt;- rep(0.9, 6)
+mp.6.2 &lt;- rep(0.8, 6)
+mp.6.3 &lt;- c(0.9, 0.8, 0.75, 0.7, 0.6, 0.4)
+mps.6 &lt;- list(mp.6.1, mp.6.2, mp.6.3)
+n.mps.6 &lt;- length(mps.6)
+
+# Correlations
+rho.6.1 &lt;- 0.9
+rho.6.2 &lt;- 0.8
+rho.6.3 &lt;- 0.77
+rho.6.4 &lt;- 0.7
+rho.6.5 &lt;- 0.5
+Sigma.6.1 &lt;- matrix(c(1, 0.9, 0.8, 0.7, 0.6, 0.5,
+                      0.9, 1, 0.8, 0.7, 0.6, 0.5,
+                      0.8, 0.8, 1, 0.7, 0.6, 0.5,
+                      0.7, 0.7, 0.7, 1, 0.6, 0.5,
+                      0.6, 0.6, 0.6, 0.6, 1, 0.5,
+                      0.5, 0.5, 0.5, 0.5, 0.5, 1), nrow=6)
+Sigma.6.2 &lt;- matrix(c(1, 0.5, 0.5, 0.5, 0.5, 0.5,
+                      0.5, 1, 0.6, 0.6, 0.6, 0.6,
+                      0.5, 0.6, 1, 0.7, 0.7, 0.7,
+                      0.5, 0.6, 0.7, 1, 0.8, 0.8,
+                      0.5, 0.6, 0.7, 0.8, 1, 0.9,
+                      0.5, 0.6, 0.7, 0.8, 0.9, 1), nrow=6)
+corrs.6 &lt;- list(rho.6.1, rho.6.2, rho.6.3, rho.6.4, rho.6.5,
+                Sigma.6.1, Sigma.6.2)
+n.corrs.6 &lt;- length(corrs.6)</code></pre>
 </div>
-<div id="compare-different-algorithms" class="section level3">
-<h3>Compare different algorithms</h3>
+<div id="compare-different-algorithms-w.-3-hypothese" class="section level3">
+<h3>Compare different algorithms w. 3 hypothese</h3>
 <div id="with-multiple-starting-points" class="section level4">
 <h4>With multiple starting points</h4>
 <pre class="r"><code>for (mp in mps[1:3]) {
@@ -450,17 +482,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.9 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.4967377 secs
+##  Time difference of 0.5199564 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.9 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 41.54823 secs
+##  Time difference of 42.39493 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.9 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 1.623456 secs
+##  Time difference of 1.64215 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.9 
 ## 
@@ -469,17 +501,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.8 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.4045329 secs
+##  Time difference of 0.4139254 secs
 ##  global optimal w:  0.5 0.5 0 
 ##  with optimal disjunctive power:  0.9023837 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 52.66815 secs
+##  Time difference of 52.91602 secs
 ##  global optimal w:  0.5 0.5 0 
 ##  with optimal disjunctive power:  0.9023837 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.6728561 secs
+##  Time difference of 0.6915693 secs
 ##  global optimal w:  0.5001768 0.4998232 1.059263e-22 
 ##  with optimal disjunctive power:  0.9023837 
 ## 
@@ -488,17 +520,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.78 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.1043863 secs
+##  Time difference of 0.1036563 secs
 ##  global optimal w:  0.5 0.5 0 
 ##  with optimal disjunctive power:  0.9053537 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 57.57177 secs
+##  Time difference of 58.11352 secs
 ##  global optimal w:  0.5 0.5 0 
 ##  with optimal disjunctive power:  0.9053537 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 1.21858 secs
+##  Time difference of 1.236208 secs
 ##  global optimal w:  0.5001234 8.293459e-25 0.4998766 
 ##  with optimal disjunctive power:  0.9053537 
 ## 
@@ -507,17 +539,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.9 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.4116032 secs
+##  Time difference of 0.419172 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.8 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 52.61993 secs
+##  Time difference of 52.60081 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.8 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 1.902013 secs
+##  Time difference of 1.930802 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.8 
 ## 
@@ -526,17 +558,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.8 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.4716995 secs
+##  Time difference of 0.472986 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.8 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 57.91751 secs
+##  Time difference of 58.74414 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.8 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.6499319 secs
+##  Time difference of 0.6579459 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.8 
 ## 
@@ -545,17 +577,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.78 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.611083 secs
+##  Time difference of 0.6120789 secs
 ##  global optimal w:  0.5 0.5 0 
 ##  with optimal disjunctive power:  0.8037329 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 1.033718 mins
+##  Time difference of 1.017938 mins
 ##  global optimal w:  0.5 0.5 0 
 ##  with optimal disjunctive power:  0.8037329 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.6909535 secs
+##  Time difference of 0.6918645 secs
 ##  global optimal w:  0.4998232 0.5001768 2.297158e-25 
 ##  with optimal disjunctive power:  0.8037329 
 ## 
@@ -564,17 +596,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.9 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.5611613 secs
+##  Time difference of 0.5710876 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.7 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 53.95486 secs
+##  Time difference of 54.16372 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.7 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 2.70378 secs
+##  Time difference of 2.700982 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.7 
 ## 
@@ -583,17 +615,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.8 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.6701381 secs
+##  Time difference of 0.6733668 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.7 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 1.024769 mins
+##  Time difference of 1.04301 mins
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.7 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 1.425975 secs
+##  Time difference of 1.435239 secs
 ##  global optimal w:  1 0 0 
 ##  with optimal disjunctive power:  0.7 
 ## 
@@ -602,24 +634,24 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.78 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.5895278 secs
+##  Time difference of 0.5871565 secs
 ##  global optimal w:  0.5 0.5 0 
 ##  with optimal disjunctive power:  0.7003393 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 1.086131 mins
+##  Time difference of 1.071609 mins
 ##  global optimal w:  0.5 0.5 0 
 ##  with optimal disjunctive power:  0.7003393 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.6226175 secs
+##  Time difference of 0.615782 secs
 ##  global optimal w:  0.4998232 0.5001768 6.748166e-26 
 ##  with optimal disjunctive power:  0.7003393</code></pre>
 </div>
 <div id="with-equaly-splitted-starting-point" class="section level4">
 <h4>With equaly splitted starting point</h4>
-<pre class="r"><code>for (mp in mps[1:3]) {
-  for (corr in corrs[1:3]) {
+<pre class="r"><code>for (mp in mps) {
+  for (corr in corrs) {
     if (any(length(corr) == 1, nrow(corr) == length(mp))) {
       cat(&quot;==================================================\n&quot;)
       cat(&quot;marginal power: &quot;, mp, &quot;\n&quot;)
@@ -642,17 +674,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.9 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.04004192 secs
+##  Time difference of 0.04025626 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.8730115 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 5.883895 secs
+##  Time difference of 6.135867 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.8730115 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.2740421 secs
+##  Time difference of 0.273421 secs
 ##  local optimal w:  1 0 5.117434e-17 
 ##  with optimal disjunctive power:  0.9 
 ## 
@@ -661,17 +693,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.8 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.3395894 secs
+##  Time difference of 0.3385344 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.9006006 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 7.523731 secs
+##  Time difference of 7.898851 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.9006006 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.1734455 secs
+##  Time difference of 0.1765292 secs
 ##  local optimal w:  0.4998065 0.5001935 6.916167e-22 
 ##  with optimal disjunctive power:  0.9023837 
 ## 
@@ -680,36 +712,131 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.78 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.03737164 secs
+##  Time difference of 0.03743815 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.9050676 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 8.596816 secs
+##  Time difference of 8.554067 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.9050676 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.5640306 secs
+##  Time difference of 0.5646811 secs
 ##  local optimal w:  0.3332054 0.3335351 0.3332595 
 ##  with optimal disjunctive power:  0.9050676 
+## 
+## ==================================================
+## marginal power:  0.9 0.9 0.9 
+## correlation:  0.7 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.4834077 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.9208158 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 11.40808 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.9208158 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.8924048 secs
+##  local optimal w:  0.3333047 0.3335227 0.3331726 
+##  with optimal disjunctive power:  0.9208158 
+## 
+## ==================================================
+## marginal power:  0.9 0.9 0.9 
+## correlation:  0.5 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.9993937 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.9506231 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 25.99287 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.9506231 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.656518 secs
+##  local optimal w:  0.3334999 0.3331479 0.3333522 
+##  with optimal disjunctive power:  0.9506231 
+## 
+## ==================================================
+## marginal power:  0.9 0.9 0.9 
+## correlation:  0.4 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.9851642 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.9621193 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 27.30776 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.9621193 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.653067 secs
+##  local optimal w:  0.3332295 0.3335374 0.3332331 
+##  with optimal disjunctive power:  0.9621193 
+## 
+## ==================================================
+## marginal power:  0.9 0.9 0.9 
+## correlation:  1 0.8 0.4 0.8 1 0.2 0.4 0.2 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.1585345 secs
+##  local optimal w:  4.643991e-16 0.5 0.5 
+##  with optimal disjunctive power:  0.9619424 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 15.8565 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.9542317 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.582365 secs
+##  local optimal w:  4.10201e-20 0.5002577 0.4997423 
+##  with optimal disjunctive power:  0.9619424 
+## 
+## ==================================================
+## marginal power:  0.9 0.9 0.9 
+## correlation:  1 0.2 0.4 0.2 1 0.8 0.4 0.8 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.5604448 secs
+##  local optimal w:  0.5024154 0.4975846 2.221143e-15 
+##  with optimal disjunctive power:  0.9619426 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 16.22755 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.9542319 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.4773839 secs
+##  local optimal w:  0.4998028 0.5001972 1.694066e-20 
+##  with optimal disjunctive power:  0.9619424 
 ## 
 ## ==================================================
 ## marginal power:  0.8 0.8 0.8 
 ## correlation:  0.9 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.3134937 secs
+##  Time difference of 0.313859 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.7550199 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 7.322852 secs
+##  Time difference of 7.610763 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.7550199 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.2521775 secs
+##  Time difference of 0.2575665 secs
 ##  local optimal w:  1 1.00614e-16 2.930285e-17 
 ##  with optimal disjunctive power:  0.8 
 ## 
@@ -718,17 +845,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.8 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.4389598 secs
+##  Time difference of 0.439687 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.7946935 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 8.089333 secs
+##  Time difference of 8.801942 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.7946935 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.2377832 secs
+##  Time difference of 0.2459006 secs
 ##  local optimal w:  0.5001105 0.4998895 1.01644e-20 
 ##  with optimal disjunctive power:  0.7993748 
 ## 
@@ -737,36 +864,131 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.78 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.4378188 secs
+##  Time difference of 0.4355915 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.8013012 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 8.926364 secs
+##  Time difference of 8.749506 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.8013012 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.195183 secs
+##  Time difference of 0.2008619 secs
 ##  local optimal w:  0.5002015 0.4997985 1.516653e-22 
 ##  with optimal disjunctive power:  0.8037329 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 
+## correlation:  0.7 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.0464499 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8251244 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 12.27724 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8251244 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.704334 secs
+##  local optimal w:  0.333192 0.3335315 0.3332765 
+##  with optimal disjunctive power:  0.8251244 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 
+## correlation:  0.5 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.0924561 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8734167 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 28.44913 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8734167 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.393491 secs
+##  local optimal w:  0.3332245 0.3335373 0.3332382 
+##  with optimal disjunctive power:  0.8734167 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 
+## correlation:  0.4 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 1.287146 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.893829 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 35.31544 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.893829 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.96614 secs
+##  local optimal w:  0.3335331 0.3332697 0.3331972 
+##  with optimal disjunctive power:  0.893829 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 
+## correlation:  1 0.8 0.4 0.8 1 0.2 0.4 0.2 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.2382135 secs
+##  local optimal w:  7.082103e-17 0.5 0.5 
+##  with optimal disjunctive power:  0.8931626 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 27.53285 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8775979 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.062733 secs
+##  local optimal w:  7.809011e-22 0.4998019 0.5001981 
+##  with optimal disjunctive power:  0.8931626 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 
+## correlation:  1 0.2 0.4 0.2 1 0.8 0.4 0.8 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.176322 secs
+##  local optimal w:  0.5 0.5 0 
+##  with optimal disjunctive power:  0.8931626 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 28.80118 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8775977 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.8675756 secs
+##  local optimal w:  0.499826 0.500174 5.624299e-19 
+##  with optimal disjunctive power:  0.8931626 
 ## 
 ## ==================================================
 ## marginal power:  0.7 0.7 0.7 
 ## correlation:  0.9 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.4616637 secs
+##  Time difference of 0.4640918 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.6427208 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 8.001066 secs
+##  Time difference of 7.813009 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.6427208 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.7725568 secs
+##  Time difference of 0.7779582 secs
 ##  local optimal w:  1 2.341877e-17 1.457168e-16 
 ##  with optimal disjunctive power:  0.7 
 ## 
@@ -775,17 +997,17 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.8 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.4482987 secs
+##  Time difference of 0.4563665 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.6879042 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 9.111208 secs
+##  Time difference of 8.587696 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.6879042 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.2037644 secs
+##  Time difference of 0.2003772 secs
 ##  local optimal w:  1 9.020562e-17 6.938894e-18 
 ##  with optimal disjunctive power:  0.7 
 ## 
@@ -794,20 +1016,895 @@ corrs &lt;- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6, Sigma.3.1
 ## correlation:  0.78 
 ## --------------------------------------------------
 ## * Algorithm:  NLOPT_LD_SLSQP 
-##  Time difference of 0.4466743 secs
+##  Time difference of 0.4536169 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.6955392 
 ## 
 ## * Algorithm:  NLOPT_GN_ISRES 
-##  Time difference of 9.347667 secs
+##  Time difference of 9.126289 secs
 ##  local optimal w:  0.3333333 0.3333333 0.3333333 
 ##  with optimal disjunctive power:  0.6955392 
 ## 
 ## * Algorithm:  NLOPT_LN_COBYLA 
-##  Time difference of 0.207581 secs
+##  Time difference of 0.2063551 secs
 ##  local optimal w:  0.5002004 0.4997996 6.910794e-22 
-##  with optimal disjunctive power:  0.7003393</code></pre>
+##  with optimal disjunctive power:  0.7003393 
+## 
+## ==================================================
+## marginal power:  0.7 0.7 0.7 
+## correlation:  0.7 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.4423153 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.7233786 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 11.28067 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.7233786 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.7148182 secs
+##  local optimal w:  0.3334388 0.333432 0.3331292 
+##  with optimal disjunctive power:  0.7233786 
+## 
+## ==================================================
+## marginal power:  0.7 0.7 0.7 
+## correlation:  0.5 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.8711534 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.7817374 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 23.51045 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.7817374 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.447981 secs
+##  local optimal w:  0.3334842 0.333377 0.3331388 
+##  with optimal disjunctive power:  0.7817374 
+## 
+## ==================================================
+## marginal power:  0.7 0.7 0.7 
+## correlation:  0.4 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 1.226043 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8074871 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 34.57821 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8074871 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 2.045009 secs
+##  local optimal w:  0.3335327 0.3332718 0.3331956 
+##  with optimal disjunctive power:  0.8074871 
+## 
+## ==================================================
+## marginal power:  0.7 0.7 0.7 
+## correlation:  1 0.8 0.4 0.8 1 0.2 0.4 0.2 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.2008517 secs
+##  local optimal w:  0 0.5 0.5 
+##  with optimal disjunctive power:  0.8064011 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 33.27304 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.7847637 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.210764 secs
+##  local optimal w:  2.532012e-21 0.5001574 0.4998426 
+##  with optimal disjunctive power:  0.8064011 
+## 
+## ==================================================
+## marginal power:  0.7 0.7 0.7 
+## correlation:  1 0.2 0.4 0.2 1 0.8 0.4 0.8 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.5710075 secs
+##  local optimal w:  0.5 0.5 1.415583e-14 
+##  with optimal disjunctive power:  0.8064014 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 33.29305 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.7847634 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.838815 secs
+##  local optimal w:  0.4997762 0.5002238 6.776264e-21 
+##  with optimal disjunctive power:  0.8064011 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.6 
+## correlation:  0.9 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.01333237 secs
+##  local optimal w:  1 6.938894e-17 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 3.45735 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8082839 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.07142901 secs
+##  local optimal w:  1 1.422473e-16 2.168404e-18 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.6 
+## correlation:  0.8 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.02205634 secs
+##  local optimal w:  1 9.714451e-17 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 4.262769 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8245427 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.469478 secs
+##  local optimal w:  1 0 9.873186e-18 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.6 
+## correlation:  0.78 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.02214909 secs
+##  local optimal w:  1 0 4.163336e-17 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 4.550889 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8280856 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.237594 secs
+##  local optimal w:  1 6.938894e-18 2.967521e-17 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.6 
+## correlation:  0.7 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.04301167 secs
+##  local optimal w:  1 0 3.469447e-18 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 5.659245 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8424427 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.07128358 secs
+##  local optimal w:  1 1.374389e-16 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.6 
+## correlation:  0.5 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.08343053 secs
+##  local optimal w:  0.8663416 0.1336584 2.282881e-17 
+##  with optimal disjunctive power:  0.9053779 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 13.17015 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.877455 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.1795316 secs
+##  local optimal w:  0.86612 0.13388 1.992669e-19 
+##  with optimal disjunctive power:  0.9053779 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.6 
+## correlation:  0.4 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.2789896 secs
+##  local optimal w:  0.7815108 0.2008676 0.01762156 
+##  with optimal disjunctive power:  0.9129501 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 19.00164 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.894063 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.4724541 secs
+##  local optimal w:  0.7814027 0.2011186 0.01747865 
+##  with optimal disjunctive power:  0.91295 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.6 
+## correlation:  1 0.8 0.4 0.8 1 0.2 0.4 0.2 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.1200957 secs
+##  local optimal w:  0.9526678 9.35941e-17 0.04733216 
+##  with optimal disjunctive power:  0.9016039 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 18.67461 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8610699 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.6467249 secs
+##  local optimal w:  0.9529257 2.256694e-20 0.04707427 
+##  with optimal disjunctive power:  0.9016039 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.6 
+## correlation:  1 0.2 0.4 0.2 1 0.8 0.4 0.8 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.08021092 secs
+##  local optimal w:  0.6968085 0.3031915 0 
+##  with optimal disjunctive power:  0.9292465 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 16.52831 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.9002609 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.2956586 secs
+##  local optimal w:  0.6965542 0.3034458 4.94984e-22 
+##  with optimal disjunctive power:  0.9292465 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.3 
+## correlation:  0.9 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.07334948 secs
+##  local optimal w:  1 0 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 1.905977 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8079223 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.05910635 secs
+##  local optimal w:  1 0 1.457168e-16 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.3 
+## correlation:  0.8 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.04053092 secs
+##  local optimal w:  1 1.94289e-16 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 1.954859 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8217067 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.467608 secs
+##  local optimal w:  1 2.081668e-17 6.931541e-18 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.3 
+## correlation:  0.78 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.01059389 secs
+##  local optimal w:  1 5.551115e-17 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 2.070501 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8245785 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.144271 secs
+##  local optimal w:  1 2.081668e-17 1.152448e-16 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.3 
+## correlation:  0.7 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.02831054 secs
+##  local optimal w:  1 3.989864e-16 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 2.64948 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8360568 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.2719202 secs
+##  local optimal w:  1 3.295975e-17 2.309351e-17 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.3 
+## correlation:  0.5 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.04542446 secs
+##  local optimal w:  0.8663416 0.1336584 0 
+##  with optimal disjunctive power:  0.9053779 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 8.224237 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8642848 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.1595488 secs
+##  local optimal w:  0.8662268 0.1337732 0 
+##  with optimal disjunctive power:  0.9053779 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.3 
+## correlation:  0.4 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.06445169 secs
+##  local optimal w:  0.7920909 0.2079091 0 
+##  with optimal disjunctive power:  0.9125856 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 13.60084 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8781838 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.2126973 secs
+##  local optimal w:  0.7918757 0.2081243 9.970188e-25 
+##  with optimal disjunctive power:  0.9125856 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.3 
+## correlation:  1 0.8 0.4 0.8 1 0.2 0.4 0.2 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.1145833 secs
+##  local optimal w:  1 0 1.179612e-16 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 16.71161 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.831341 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.2054408 secs
+##  local optimal w:  1 6.938894e-18 1.387779e-17 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.75 0.3 
+## correlation:  1 0.2 0.4 0.2 1 0.8 0.4 0.8 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.06359673 secs
+##  local optimal w:  0.6968078 0.3031922 0 
+##  with optimal disjunctive power:  0.9292465 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 12.51451 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8976592 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.286319 secs
+##  local optimal w:  0.6971516 0.3028484 2.782054e-20 
+##  with optimal disjunctive power:  0.9292464 
+## 
+## ==================================================
+## marginal power:  0.9 0.5 0.5 
+## correlation:  0.9 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.0957005 secs
+##  local optimal w:  1 0 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 3.107065 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8018629 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.1162426 secs
+##  local optimal w:  1 0 1.266348e-16 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.5 0.5 
+## correlation:  0.8 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.02757144 secs
+##  local optimal w:  1 2.775558e-17 8.326673e-17 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 4.029462 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8054454 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.1695085 secs
+##  local optimal w:  1 8.456777e-17 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.5 0.5 
+## correlation:  0.78 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.1386328 secs
+##  local optimal w:  1 0 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 4.586841 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8067507 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.186167 secs
+##  local optimal w:  1 3.989864e-17 2.356187e-18 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.5 0.5 
+## correlation:  0.7 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.04448867 secs
+##  local optimal w:  1 0 6.938894e-17 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 5.268682 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8135104 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.3103702 secs
+##  local optimal w:  1 3.66808e-17 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.5 0.5 
+## correlation:  0.5 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.06150126 secs
+##  local optimal w:  1 8.326673e-17 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 9.178663 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8370709 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.9213603 secs
+##  local optimal w:  1 3.382711e-17 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.5 0.5 
+## correlation:  0.4 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.1197586 secs
+##  local optimal w:  0.9893466 0.0053267 0.0053267 
+##  with optimal disjunctive power:  0.9002025 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 12.20901 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8507709 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.219908 secs
+##  local optimal w:  0.9895192 0.00518322 0.00529754 
+##  with optimal disjunctive power:  0.9002024 
+## 
+## ==================================================
+## marginal power:  0.9 0.5 0.5 
+## correlation:  1 0.8 0.4 0.8 1 0.2 0.4 0.2 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.08338428 secs
+##  local optimal w:  0.9940782 0 0.005921803 
+##  with optimal disjunctive power:  0.9001096 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 13.78891 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8319947 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.2368531 secs
+##  local optimal w:  0.9939683 2.068397e-20 0.006031687 
+##  with optimal disjunctive power:  0.9001096 
+## 
+## ==================================================
+## marginal power:  0.9 0.5 0.5 
+## correlation:  1 0.2 0.4 0.2 1 0.8 0.4 0.8 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 0.108865 secs
+##  local optimal w:  0.91958 0.08042005 5.267317e-17 
+##  with optimal disjunctive power:  0.9042147 
+## 
+## * Algorithm:  NLOPT_GN_ISRES 
+##  Time difference of 16.35351 secs
+##  local optimal w:  0.3333333 0.3333333 0.3333333 
+##  with optimal disjunctive power:  0.8542837 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 0.1952085 secs
+##  local optimal w:  0.9193462 0.08065385 1.799027e-21 
+##  with optimal disjunctive power:  0.9042147</code></pre>
 </div>
+</div>
+<div id="compare-different-algorithms-w.-6-hypothese" class="section level3">
+<h3>Compare different algorithms w. 6 hypothese</h3>
+<p>In this section we compare SLSQP using multiple starting points with
+COBYLA using single starting point on 6 hypotheses</p>
+<pre class="r"><code>for (mp in mps.6) {
+  for (corr in corrs.6) {
+    if (any(length(corr) == 1, nrow(corr) == length(mp))) {
+      cat(&quot;==================================================\n&quot;)
+      cat(&quot;marginal power: &quot;, mp, &quot;\n&quot;)
+      cat(&quot;correlation: &quot;, corr, &quot;\n&quot;)
+      cat(&quot;--------------------------------------------------\n&quot;)
+      # SLSQP w. multiple starting points
+      start = Sys.time()
+      res &lt;- go_optim_w_dp(alpha=0.025, mp=mp, rho=corr, optim_opts=opts.algo[[1]])
+      end = Sys.time()
+      cat(&quot;* Algorithm: &quot;, &quot;NLOPT_LD_SLSQP&quot;, &quot;\n\t&quot;)
+      print(end - start)
+      cat(&quot;\tglobal optimal w: &quot;, unlist(res[1, paste0(&quot;w&quot;, seq(length(mp)))]), &quot;\n&quot;)
+      cat(&quot;\twith optimal disjunctive power: &quot;, res[1, &#39;optimal_value&#39;], &quot;\n\n&quot;)
+      # COBYLA w. single starting point
+      start = Sys.time()
+      res &lt;- optim_w_dp(alpha=0.025, mp=mp, rho=corr, optim_opts=opts.algo[[3]])
+      end = Sys.time()
+      cat(&quot;* Algorithm: &quot;, &quot;NLOPT_LN_COBYLA&quot;, &quot;\n\t&quot;)
+      print(end - start)
+      cat(&quot;\tlocal optimal w: &quot;, res$w, &quot;\n&quot;)
+      cat(&quot;\twith optimal disjunctive power: &quot;, -res$optima$objective, &quot;\n\n&quot;)
+    }
+  }
+}</code></pre>
+<pre><code>## ==================================================
+## marginal power:  0.9 0.9 0.9 0.9 0.9 0.9 
+## correlation:  0.9 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 1.909602 mins
+##  global optimal w:  1 0 0 0 0 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 19.10074 secs
+##  local optimal w:  1 1.075529e-15 2.792905e-16 0 1.359277e-16 1.036805e-16 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.9 0.9 0.9 0.9 0.9 
+## correlation:  0.8 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 3.215732 mins
+##  global optimal w:  0.5 0.5 0 0 0 0 
+##  with optimal disjunctive power:  0.9023837 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 18.9026 secs
+##  local optimal w:  0.4999405 2.070017e-20 1.137768e-23 1.333796e-22 0.5000595 6.826078e-22 
+##  with optimal disjunctive power:  0.9023837 
+## 
+## ==================================================
+## marginal power:  0.9 0.9 0.9 0.9 0.9 0.9 
+## correlation:  0.77 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 3.025017 mins
+##  global optimal w:  0.3333333 0.3333333 0.3333333 0 0 0 
+##  with optimal disjunctive power:  0.9072103 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 39.37428 secs
+##  local optimal w:  0.3333022 3.411909e-21 1.952656e-21 0.3333201 1.178635e-20 0.3333777 
+##  with optimal disjunctive power:  0.9072103 
+## 
+## ==================================================
+## marginal power:  0.9 0.9 0.9 0.9 0.9 0.9 
+## correlation:  0.7 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 2.043226 mins
+##  global optimal w:  0.1666667 0.1666667 0.1666667 0.1666667 0.1666667 0.1666667 
+##  with optimal disjunctive power:  0.923955 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.208394 mins
+##  local optimal w:  0.1666368 0.166695 0.1666139 0.1667083 0.1666048 0.1667414 
+##  with optimal disjunctive power:  0.923955 
+## 
+## ==================================================
+## marginal power:  0.9 0.9 0.9 0.9 0.9 0.9 
+## correlation:  0.5 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 16.3709 mins
+##  global optimal w:  0.1666627 0.1666746 0.1666627 0.1666746 0.1666627 0.1666627 
+##  with optimal disjunctive power:  0.9641721 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 49.72506 secs
+##  local optimal w:  0.1667418 0.1665731 0.1666606 0.1666598 0.1666645 0.1667003 
+##  with optimal disjunctive power:  0.9641721 
+## 
+## ==================================================
+## marginal power:  0.9 0.9 0.9 0.9 0.9 0.9 
+## correlation:  1 0.9 0.8 0.7 0.6 0.5 0.9 1 0.8 0.7 0.6 0.5 0.8 0.8 1 0.7 0.6 0.5 0.7 0.7 0.7 1 0.6 0.5 0.6 0.6 0.6 0.6 1 0.5 0.5 0.5 0.5 0.5 0.5 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 7.903284 mins
+##  global optimal w:  2.589272e-15 3.416887e-15 0.1793543 0.1793523 0.2633794 0.3779141 
+##  with optimal disjunctive power:  0.9483941 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 37.36765 secs
+##  local optimal w:  0.1794069 1.769749e-20 7.713015e-20 0.1793288 0.2632972 0.3779672 
+##  with optimal disjunctive power:  0.9483937 
+## 
+## ==================================================
+## marginal power:  0.9 0.9 0.9 0.9 0.9 0.9 
+## correlation:  1 0.5 0.5 0.5 0.5 0.5 0.5 1 0.6 0.6 0.6 0.6 0.5 0.6 1 0.7 0.7 0.7 0.5 0.6 0.7 1 0.8 0.8 0.5 0.6 0.7 0.8 1 0.9 0.5 0.6 0.7 0.8 0.9 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 7.063745 mins
+##  global optimal w:  0.378192 0.2629337 0.1794979 0.1793764 2.225575e-15 2.310081e-15 
+##  with optimal disjunctive power:  0.948394 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 49.30461 secs
+##  local optimal w:  0.3778962 0.2635063 0.1792347 0.1793628 6.286573e-21 1.353313e-06 
+##  with optimal disjunctive power:  0.9483933 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 0.8 0.8 0.8 
+## correlation:  0.9 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 2.71421 mins
+##  global optimal w:  1 0 0 0 0 0 
+##  with optimal disjunctive power:  0.8 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 27.52771 secs
+##  local optimal w:  1 1.074514e-18 3.542427e-19 0 6.021147e-19 1.824184e-18 
+##  with optimal disjunctive power:  0.8 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 0.8 0.8 0.8 
+## correlation:  0.8 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 3.002198 mins
+##  global optimal w:  1 0 0 0 0 0 
+##  with optimal disjunctive power:  0.8 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 20.62945 secs
+##  local optimal w:  1 2.220446e-16 1.291299e-18 5.039345e-19 1.214744e-19 5.89806e-17 
+##  with optimal disjunctive power:  0.8 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 0.8 0.8 0.8 
+## correlation:  0.77 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 3.716122 mins
+##  global optimal w:  0.5 6.318178e-17 0.5 0 7.349752e-18 0 
+##  with optimal disjunctive power:  0.8058434 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 35.35139 secs
+##  local optimal w:  0.3332713 0.3332152 1.166007e-21 9.258746e-21 0.3335135 5.202126e-21 
+##  with optimal disjunctive power:  0.8044924 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 0.8 0.8 0.8 
+## correlation:  0.7 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 3.052491 mins
+##  global optimal w:  0.2 0.2 0.2 0.2 0.2 0 
+##  with optimal disjunctive power:  0.8275683 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.38006 mins
+##  local optimal w:  0.1666604 0.1665792 0.1666385 0.1666851 0.1666916 0.1667453 
+##  with optimal disjunctive power:  0.8274529 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 0.8 0.8 0.8 
+## correlation:  0.5 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 9.375629 mins
+##  global optimal w:  0.1666667 0.1666667 0.1666667 0.1666667 0.1666667 0.1666667 
+##  with optimal disjunctive power:  0.8971659 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 41.64034 secs
+##  local optimal w:  0.1667582 0.1666788 0.1666062 0.1666937 0.1666424 0.1666206 
+##  with optimal disjunctive power:  0.8971659 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 0.8 0.8 0.8 
+## correlation:  1 0.9 0.8 0.7 0.6 0.5 0.9 1 0.8 0.7 0.6 0.5 0.8 0.8 1 0.7 0.6 0.5 0.7 0.7 0.7 1 0.6 0.5 0.6 0.6 0.6 0.6 1 0.5 0.5 0.5 0.5 0.5 0.5 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 8.630187 mins
+##  global optimal w:  0 9.594056e-18 0.1751197 0.1751197 0.2657855 0.383975 
+##  with optimal disjunctive power:  0.8689798 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 1.619844 mins
+##  local optimal w:  0.1750934 4.235165e-22 9.098987e-24 0.1750131 0.2659023 0.3839912 
+##  with optimal disjunctive power:  0.8689798 
+## 
+## ==================================================
+## marginal power:  0.8 0.8 0.8 0.8 0.8 0.8 
+## correlation:  1 0.5 0.5 0.5 0.5 0.5 0.5 1 0.6 0.6 0.6 0.6 0.5 0.6 1 0.7 0.7 0.7 0.5 0.6 0.7 1 0.8 0.8 0.5 0.6 0.7 0.8 1 0.9 0.5 0.6 0.7 0.8 0.9 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 6.25419 mins
+##  global optimal w:  0.383975 0.2657855 0.1751197 5.874274e-24 0.1751197 3.996317e-18 
+##  with optimal disjunctive power:  0.8689798 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 46.5631 secs
+##  local optimal w:  0.3840712 0.2656963 0.1750887 0.1751438 5.251604e-20 4.423091e-22 
+##  with optimal disjunctive power:  0.8689798 
+## 
+## ==================================================
+## marginal power:  0.9 0.8 0.75 0.7 0.6 0.4 
+## correlation:  0.9 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 10.61846 secs
+##  global optimal w:  1 0 0 0 0 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 2.902076 secs
+##  local optimal w:  1 1.988091e-19 4.336809e-19 7.784025e-19 1.908196e-17 3.946496e-17 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.8 0.75 0.7 0.6 0.4 
+## correlation:  0.8 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 15.54816 secs
+##  global optimal w:  1 0 0 0 0 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 5.411658 secs
+##  local optimal w:  1 1.451129e-18 1.734723e-18 1.514996e-18 7.949846e-18 8.296707e-19 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.8 0.75 0.7 0.6 0.4 
+## correlation:  0.77 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 13.72575 secs
+##  global optimal w:  1 0 0 0 0 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 8.758121 secs
+##  local optimal w:  1 1.123182e-16 0 2.18839e-19 1.975228e-19 6.938894e-18 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.8 0.75 0.7 0.6 0.4 
+## correlation:  0.7 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 15.67429 secs
+##  global optimal w:  1 0 0 0 0 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 8.92648 secs
+##  local optimal w:  1 2.602085e-18 9.020562e-17 8.673617e-18 1.257675e-17 4.77049e-18 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.8 0.75 0.7 0.6 0.4 
+## correlation:  0.5 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 4.506955 mins
+##  global optimal w:  0.7249291 0.1919836 0.0709149 0.01217241 0 0 
+##  with optimal disjunctive power:  0.9134884 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 12.36205 secs
+##  local optimal w:  0.7249198 0.1919647 0.07100972 0.01210583 6.352747e-21 3.520481e-21 
+##  with optimal disjunctive power:  0.9134884 
+## 
+## ==================================================
+## marginal power:  0.9 0.8 0.75 0.7 0.6 0.4 
+## correlation:  1 0.9 0.8 0.7 0.6 0.5 0.9 1 0.8 0.7 0.6 0.5 0.8 0.8 1 0.7 0.6 0.5 0.7 0.7 0.7 1 0.6 0.5 0.6 0.6 0.6 0.6 1 0.5 0.5 0.5 0.5 0.5 0.5 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 25.57035 secs
+##  global optimal w:  1 0 0 0 0 0 
+##  with optimal disjunctive power:  0.9 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 7.935066 secs
+##  local optimal w:  1 8.023096e-18 1.07924e-17 3.642919e-17 9.714451e-17 1.467439e-17 
+##  with optimal disjunctive power:  0.9 
+## 
+## ==================================================
+## marginal power:  0.9 0.8 0.75 0.7 0.6 0.4 
+## correlation:  1 0.5 0.5 0.5 0.5 0.5 0.5 1 0.6 0.6 0.6 0.6 0.5 0.6 1 0.7 0.7 0.7 0.5 0.6 0.7 1 0.8 0.8 0.5 0.6 0.7 0.8 1 0.9 0.5 0.6 0.7 0.8 0.9 1 
+## --------------------------------------------------
+## * Algorithm:  NLOPT_LD_SLSQP 
+##  Time difference of 2.001639 mins
+##  global optimal w:  0.7579528 0.1971621 0.04488513 2.222136e-17 3.902124e-15 4.446344e-17 
+##  with optimal disjunctive power:  0.9121914 
+## 
+## * Algorithm:  NLOPT_LN_COBYLA 
+##  Time difference of 10.9673 secs
+##  local optimal w:  0.7580574 0.197106 0.04483664 3.972431e-21 2.01881e-23 1.505831e-21 
+##  with optimal disjunctive power:  0.9121912</code></pre>
 </div>
 </div>
 
