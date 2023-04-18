@@ -1,5 +1,6 @@
 source('src/utils/misc.R')
 
+
 #' A function to transfer single correlation to matrix
 #'
 #' @param rho float, single correlation
@@ -20,10 +21,11 @@ dpc <- function(mus, Sigma, alphas) {
   }
   set.seed(2022)
   1 - pmvnorm(upper = zs, mean = mus, sigma = Sigma,
-              algorithm = GenzBretz(maxpts = 1e6,
-                                    abseps = 1e-6,
-                                    releps = 1e-6)
-              )
+              algorithm = mvtnorm::GenzBretz(maxpts = 1e6,
+                                             abseps = 1e-6,
+                                             releps = 1e-6)
+  )
+  # 1 - pmvn(upper = zs, mean = mus, sigma = Sigma)
 }
 
 #' A function to calculate correlated disjunctive power of
@@ -101,10 +103,13 @@ loss_dpc_d <- function(w, k, alpha, mp, rho, min.w=1e-8) {
   derivative = pmvnorm(upper = zs[-k],
                        mean = cd$mean,
                        sigma = cd$covar,
-                       algorithm = GenzBretz(maxpts = 1e6,
-                                             abseps = 1e-6,
-                                             releps = 1e-6)
-                       )
+                       algorithm = mvtnorm::GenzBretz(maxpts = 1e6,
+                                                      abseps = 1e-6,
+                                                      releps = 1e-6)
+  )
+  # derivative = pmvn(upper = zs[-k],
+  #                   mean = cd$mean,
+  #                   sigma = cd$covar)
   derivative = derivative * inverse_derivative(w = w,
                                                alpha = alpha,
                                                i = k)

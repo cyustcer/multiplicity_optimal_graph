@@ -1,68 +1,61 @@
 source('src/objectives/independent_disjunctive_power.R')
 source('src/objectives/correlated_disjunctive_power.R')
 source('src/objectives/correlated_conjunctive_power.R')
-
-
-create_initial_ws <- function(constraint.w) {
-  n = length(constraint.w)
-  remain.ws = 1 - sum(constraint.w, na.rm=T)
-  cand.ws <- NULL
-  for (i in 1:n) {
-    if (is.na(constraint.w[i])) {
-      cand = list(c(0, 1))
-      names(cand) = paste0("w", i)
-      cand.ws <- c(cand.ws, cand)
-    }
-    else {
-      cand = list(c(constraint.w[i]))
-    }
-  }
-  initial.ws <- cand.ws %>% expand.grid()
-  initial.ws = initial.ws[rowSums(initial.ws) != 0, , drop=F]
-  initial.ws = initial.ws / rowSums(initial.ws) * remain.ws
-  row.names(initial.ws) <- NULL
-  for (i in 1:n) {
-    if (!is.na(constraint.w[i])) {
-      initial.ws[paste0("w", i)] = constraint.w[i]
-    }
-  }
-  initial.ws %>% select(sort(names(initial.ws)))
-}
+source('src/utils/tools.R')
 
 
 opts <- list("algorithm" = "NLOPT_LD_SLSQP",
-             "xtol_rel" = 1e-3,
-             "maxeval" = 1e3)
+             "xtol_rel" = 1e-4,
+             "maxeval" = 1e4)
 
 
 optim_w_dp <- function(alpha, mp, rho=NULL,
                        initial_w=NULL, constraint.w=NULL,
                        lb=NULL, ub=NULL, min.w=1e-8,
                        optim_opts=opts) {
+  # Change the dimension of single correlation
+  if (length(rho) == 1) {
+    rho = matrix(rho, length(mp), length(mp))
+    diag(rho) = 1
+  }
   # Filter non-zeros marginal power
   if (is.null(constraint.w)) {
     constraint.w = rep(NA, length(mp))
   }
   mp.p = mp[constraint.w != 0 | is.na(constraint.w)]
   constraint.p = constraint.w[constraint.w != 0 | is.na(constraint.w)]
+  initial_w.p = initial_w[constraint.w != 0 | is.na(constraint.w)]
+  if (length(rho) != 0) {
+    rho.p = rho[constraint.w != 0 | is.na(constraint.w),
+                constraint.w != 0 | is.na(constraint.w)]
+  }
+  else {
+    rho.p = rho
+  }
   # Optimize non zeros w's
   n.hypo.p = length(mp.p)
   if (is.null(lb)) {
     # lb = rep(1e-8, n.hypo.p)
     lb = rep(0, n.hypo.p)
   }
+  else {
+    lb = lb[constraint.w != 0 | is.na(constraint.w)]
+    lb[!is.na(constraint.p)] = constraint.p[!is.na(constraint.p)]
+  }
   if (is.null(ub)) {
     ub = rep(1, n.hypo.p)
   }
-  lb[!is.na(constraint.p)] = constraint.p[!is.na(constraint.p)]
-  ub[!is.na(constraint.p)] = constraint.p[!is.na(constraint.p)]
+  else {
+    ub = ub[constraint.w != 0 | is.na(constraint.w)]
+    ub[!is.na(constraint.p)] = constraint.p[!is.na(constraint.p)]
+  }
   if (is.null(initial_w)) {
     remain_weight = 1 - sum(lb)
-    initial_w = (ub - lb) / sum(ub - lb) * remain_weight + lb
+    initial_w.p = (ub - lb) / sum(ub - lb) * remain_weight + lb
   }
   if (optim_opts$algorithm == "NLOPT_LN_COBYLA") {
     if (is.null(rho)) {
-      res <- nloptr(x0 = initial_w,
+      res <- nloptr(x0 = initial_w.p,
                     eval_f = loss_dp,
                     eval_grad_f = loss_dp_grad,
                     alpha = alpha, mp = mp.p,
@@ -71,10 +64,10 @@ optim_w_dp <- function(alpha, mp, rho=NULL,
                     opts=optim_opts)
     }
     else {
-      res <- nloptr(x0=initial_w,
+      res <- nloptr(x0=initial_w.p,
                     eval_f=loss_dpc,
                     eval_grad_f = loss_dpc_grad,
-                    alpha=alpha, mp=mp.p, rho=rho,
+                    alpha=alpha, mp=mp.p, rho=rho.p,
                     lb=lb, ub=ub, min.w=min.w,
                     eval_g_ineq = ineqn_corr,
                     opts=optim_opts)
@@ -82,7 +75,7 @@ optim_w_dp <- function(alpha, mp, rho=NULL,
   }
   else {
     if (is.null(rho)) {
-      res <- nloptr(x0 = initial_w,
+      res <- nloptr(x0 = initial_w.p,
                     eval_f = loss_dp,
                     eval_grad_f = loss_dp_grad,
                     alpha = alpha, mp = mp.p,
@@ -92,10 +85,10 @@ optim_w_dp <- function(alpha, mp, rho=NULL,
                     opts=optim_opts)
     }
     else {
-      res <- nloptr(x0=initial_w,
+      res <- nloptr(x0=initial_w.p,
                     eval_f=loss_dpc,
                     eval_grad_f = loss_dpc_grad,
-                    alpha=alpha, mp=mp.p, rho=rho,
+                    alpha=alpha, mp=mp.p, rho=rho.p,
                     lb=lb, ub=ub, min.w=min.w,
                     eval_g_eq = eqn_corr,
                     eval_jac_g_eq = eqn_corr_grad,
@@ -123,7 +116,14 @@ go_optim_w_dp <- function(alpha, mp, rho=NULL,
   if (is.null(constraint.w)) {
     constraint.w = rep(NA, n)
   }
+  if (is.null(lb)) {
+    lb = rep(0, n)
+  }
+  if (is.null(ub)) {
+    ub = rep(1, n)
+  }
   initial.ws = create_initial_ws(constraint.w)
+  initial.ws = adjust_initial_ws(initial.ws, lb, ub)
   N = nrow(initial.ws)
   optimas <- data.frame(matrix(ncol = 2*n+1, nrow = 0))
   colnames(optimas) <- c(paste0('initial ', colnames(initial.ws)), 

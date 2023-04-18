@@ -7,9 +7,9 @@ cpc <- function(mus, Sigma, alphas) {
   }
   set.seed(2022)
   pmvnorm(lower=zs, mean=mus, sigma=Sigma,
-          algorithm = GenzBretz(maxpts = 1e6, 
-                                abseps = 1e-6, 
-                                releps = 1e-6))
+          algorithm = mvtnorm::GenzBretz(maxpts = 1e6,
+                                         abseps = 1e-6,
+                                         releps = 1e-6))
 }
 
 conjunctive_power_corr <- function(w=c(0.5, 0.5), alpha=0.025, mp=rep(0.9, 2), rho=0) {
@@ -54,9 +54,9 @@ loss_cpc_d <- function(w, k, alpha, mp, rho, min.w=1e-8) {
   derivative = pmvnorm(lower = zs[-k],
                        mean = cd$mean,
                        sigma = cd$covar,
-                       algorithm = GenzBretz(maxpts = 1e6,
-                                             abseps = 1e-6,
-                                             releps = 1e-6))
+                       algorithm = mvtnorm::GenzBretz(maxpts = 1e6,
+                                                      abseps = 1e-6,
+                                                      releps = 1e-6))
   derivative = derivative * inverse_derivative(w = w,
                                                alpha = alpha,
                                                i = k)
