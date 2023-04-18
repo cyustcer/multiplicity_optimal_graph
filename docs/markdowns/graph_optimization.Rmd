@@ -1,22 +1,12 @@
 ---
 title: "Graph Optimization"
-author: "Yao Chen"
-date: "9/1/2022"
 output:
   html_document: default
   pdf_document: default
 ---
 
-## Case study on graph optimization with 6 hypotheses
+In this markdown, we demonstrate the motivating example in section 5 of our manuscript and how to implement with the function we provided. We first load the functions that are needed for the optimization.
 
-
-### Set up
-
-The case study is described in the manuscript.
-
-```{r graph, echo=FALSE}
-knitr::include_graphics(normalizePath("docs/images/case_study.png"))
-```
 
 ```{r print_setup, include=FALSE}
 # Define a generic method that transforms an object x in a LaTeX string
@@ -72,7 +62,14 @@ source('src/optimization/graph_optimization.R')
 ```
 
 
-Six hypotheses are tested on 3 doses against placebo on primary and secondary endpoints. The graphical template is defined in the graph above. Sample sizes are set to be the same for all doses and placebo as 200. The FWER is set to be controlled at 0.025 level on one-sided hypotheses. The marginal powers for $H_i$, $i=1, ..., 6$ are 0.8, 0.8, 0.8, 0.9, 0.8, 0.71. 
+## Set up
+
+```{r graph, echo=FALSE, out.width="85%"}
+knitr::include_graphics(normalizePath("docs/images/case_study.png"))
+```
+
+
+Six hypotheses are tested on 3 doses against placebo on primary and secondary endpoints (see figure above). The graphical template is defined in the graph above. Sample sizes are set to be the same for all doses and placebo as 200. The FWER is set to be controlled at 0.025 level on one-sided hypotheses. The marginal powers for $H_i$, $i=1, ..., 6$ are 0.8, 0.8, 0.8, 0.9, 0.8, 0.71. 
 
 ```{r setup}
 alpha = 0.025  # FWER
@@ -102,7 +99,7 @@ Sigma = rbind(cbind(A, A*rho), cbind(A*rho, A))
 ```
 
 
-### Optimizing hypothesis weights with constraints
+## Optimizing hypothesis weights with constraints
 
 In the first step, we optimize the disjunctive power of all hypotheses with following constraints:
 
@@ -117,8 +114,8 @@ To set up the constraints in the case, we need to set the argument `constraint.w
 
 ```{r w_optimization}
 # constraints for initial hypotheses weights
-constraint.w = c(NA, NA, NA,  # no constraints for primary
-                 0, 0, 0)  # 0 weights for all secondary
+constraint.w = c(NA, NA, NA,  # no constraints for primary hypotheses
+                 0, 0, 0)  # 0 weights for all secondary hypotheses
 
 # optimizing with multiple initial starting points
 res = go_optim_w_dp(alpha, mp, rho=Sigma, constraint.w=constraint.w)
@@ -131,7 +128,7 @@ w.optim = res[1, ] %>%  # Select the best optima from multiple outputs
 
 The optimal hypothesis weighs with constraints are `r round(w.optim, 3)`.
 
-### Optimizing transition matrix with constraints
+## Optimizing transition matrix with constraints
 
 In the second step, we optimize the transition matrix to optimize the second step disjunctive power if one hypothesis is rejected. We need to use 
 
@@ -141,7 +138,7 @@ According to the study set up, we need the following constraints:
 * The transition weight from a secondary hypothesis to another secondary hypothesis should be 0, because this may lead to the rejection of the latter secondary hypothesis without rejecting its corresponding primary hypothesis;
 * The transition weight from a secondary hypothesis to primary hypotheses should be positive. But given the second bullet point, the edge from a secondary hypothesis to its corresponding primary hypothesis for the same dose-control comparison may be redundant. For a simpler graph, we set this transition weight to 0.
 
-Similarly, to set up the constraints, we need to pass the argument `constraint.G` to function `optim_G_dp` with the pre-defined constraints on the graph. 0 will be set to the paths that do not exist. The upper and lower bound based on previous weight assigment for the second step optimization will be captured automatically.
+Similarly, to set up the constraints, we need to pass the argument `constraint.G` to function `optim_G_dp` with the pre-defined constraints on the graph. 0 will be set to the paths that do not exist and NA will be assigned to the paths that do not have pre-defined weights. The upper and lower bound based on previous weight assignment for the second step optimization will be captured automatically.
 
 ```{r graph_optimization}
 # Set up constraints
@@ -163,6 +160,6 @@ Optimal hypothesis weights $w$'s are `r round(w.optim, 3)`, the optimal transiti
 
 `r round(G.optim, 3)` and the optimal graph is displayed as
 
-```{r optimal_graph, echo=FALSE}
+```{r optimal_graph, echo=FALSE, out.width="85%"}
 knitr::include_graphics(normalizePath("docs/images/case_study_w_params.PNG"))
 ```
