@@ -1,0 +1,251 @@
+---
+title: "Disjunctive power examples"
+author: "Yao Chen"
+date: "7/25/2022"
+output:
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+
+```{r, load_source, warning=FALSE}
+source('src/optimization/w_optimization.R')
+```
+
+
+## 3-hypothesis scenario
+
+### Define parameters
+
+```{r, 3_hypos_params}
+# Marginal power
+mp.3.1 <- rep(0.9, 3)
+mp.3.2 <- rep(0.8, 3)
+mp.3.3 <- rep(0.7, 3)
+mp.3.4 <- c(0.9, 0.75, 0.6)
+mp.3.5 <- c(0.9, 0.75, 0.3)
+mp.3.6 <- c(0.9, 0.5, 0.5)
+mps.3 <- list(mp.3.1, mp.3.2, mp.3.3, mp.3.4, mp.3.5, mp.3.6)
+n.mps.3 <- length(mps.3)
+
+# Correlations
+rho.3.1 <- 0.9
+rho.3.2 <- 0.8
+rho.3.3 <- 0.78
+rho.3.4 <- 0.7
+rho.3.5 <- 0.5
+rho.3.6 <- 0.4
+Sigma.3.1 <- matrix(c(1, 0.8, 0.4,
+                      0.8, 1, 0.2,
+                      0.4, 0.2, 1), nrow=3)
+Sigma.3.2 <- matrix(c(1, 0.2, 0.4,
+                      0.2, 1, 0.8,
+                      0.4, 0.8, 1), nrow=3)
+corrs.3 <- list(rho.3.1, rho.3.2, rho.3.3, rho.3.4, rho.3.5, rho.3.6,
+                Sigma.3.1, Sigma.3.2)
+n.corrs.3 <- length(corrs.3)
+```
+
+### w optimization
+
+```{r, 3_hypos_optim}
+for (mp in mps.3) {
+  for (corr in corrs.3) {
+    start = Sys.time()
+    res <- go_optim_w_dp(alpha=0.025, mp=mp, rho=corr)
+    end = Sys.time()
+    print(end - start)
+    cat("\tmarginal power: ", mp, "\n")
+    if (length(corr) == 1) {
+      cat("\tcorrelation: ", corr, "\n")
+    }
+    else {
+      cat("\tcorrelation matrix: \n")
+      for (i in 1:3) {
+        cat("\t\t", corr[i, ], "\n")
+      }
+    }
+    cat("\tglobal optimal w: ", unlist(res[1, c('w1', 'w2', 'w3')]), "\n")
+    cat("\twith optimal disjunctive power: ", res[1, 'optimal_value'], "\n\n")
+  }
+}
+```
+
+
+## 4-hypothesis scenario
+
+### Define parameters
+
+```{r, 4_hypos_params}
+# Marginal powers
+mp.4.1 <- rep(0.9, 4)
+mp.4.2 <- rep(0.8, 4)
+mp.4.3 <- c(0.9, 0.75, 0.6, 0.4)
+mps.4 <- list(mp.4.1, mp.4.2, mp.4.3)
+n.mps.4 <- length(mps.4)
+
+# Correlations
+rho.4.1 <- 0.9
+rho.4.2 <- 0.8
+rho.4.3 <- 0.77
+rho.4.4 <- 0.7
+rho.4.5 <- 0.5
+Sigma.4.1 <- matrix(c(1, 0.8, 0.6, 0.4,
+                      0.8, 1, 0.6, 0.4,
+                      0.6, 0.6, 1, 0.4,
+                      0.4, 0.4, 0.4, 1), nrow=4)
+Sigma.4.2 <- matrix(c(1, 0.4, 0.4, 0.4,
+                      0.4, 1, 0.6, 0.6,
+                      0.4, 0.6, 1, 0.8,
+                      0.4, 0.6, 0.8, 1), nrow=4)
+corrs.4 <- list(rho.4.1, rho.4.2, rho.4.3, rho.4.4, rho.4.5,
+                Sigma.4.1, Sigma.4.2)
+n.corrs.4 <- length(corrs.4)
+```
+
+### w Optimization
+
+```{r, 4_hypos_optim}
+for (mp in mps.4) {
+  for (corr in corrs.4) {
+    start = Sys.time()
+    res <- go_optim_w_dp(alpha=0.025, mp=mp, rho=corr)
+    end = Sys.time()
+    print(end - start)
+    cat("\tmarginal power: ", mp, "\n")
+    if (length(corr) == 1) {
+      cat("\tcorrelation: ", corr, "\n")
+    }
+    else {
+      cat("\tcorrelation matrix: \n")
+      for (i in 1:4) {
+        cat("\t\t", corr[i, ], "\n")
+      }
+    }
+    cat("\tglobal optimal w: ", unlist(res[1, c('w1', 'w2', 'w3', 'w4')]), "\n")
+    cat("\twith optimal disjunctive power: ", res[1, 'optimal_value'], "\n\n")
+  }
+}
+```
+
+
+## 5-hypothesis scenario
+
+### Define parameters
+
+```{r, 5_hypos_params}
+# Marginal powers
+mp.5.1 <- rep(0.9, 5)
+mp.5.2 <- rep(0.8, 5)
+mp.5.3 <- c(0.9, 0.8, 0.75, 0.6, 0.4)
+mps.5 <- list(mp.5.1, mp.5.2, mp.5.3)
+n.mps.5 <- length(mps.5)
+
+# Correlations
+rho.5.1 <- 0.9
+rho.5.2 <- 0.8
+rho.5.3 <- 0.77
+rho.5.4 <- 0.7
+rho.5.5 <- 0.5
+Sigma.5.1 <- matrix(c(1, 0.8, 0.8, 0.6, 0.4,
+                      0.8, 1, 0.6, 0.6, 0.4,
+                      0.8, 0.6, 1, 0.4, 0.4,
+                      0.6, 0.6, 0.4, 1, 0.4,
+                      0.4, 0.4, 0.4, 0.4, 1), nrow=5)
+Sigma.5.2 <- matrix(c(1, 0.4, 0.4, 0.4, 0.4,
+                      0.4, 1, 0.4, 0.6, 0.6,
+                      0.4, 0.4, 1, 0.6, 0.8,
+                      0.4, 0.6, 0.6, 1, 0.8,
+                      0.4, 0.6, 0.8, 0.8, 1), nrow=5)
+corrs.5 <- list(rho.5.1, rho.5.2, rho.5.3, rho.5.4, rho.5.5,
+                Sigma.5.1, Sigma.5.2)
+n.corrs.5 <- length(corrs.5)
+```
+
+### w Optimization
+
+```{r, 5_hypos_optim}
+for (mp in mps.5) {
+  for (corr in corrs.5) {
+    start = Sys.time()
+    res <- go_optim_w_dp(alpha=0.025, mp=mp, rho=corr)
+    end = Sys.time()
+    print(end - start)
+    cat("\tmarginal power: ", mp, "\n")
+    if (length(corr) == 1) {
+      cat("\tcorrelation: ", corr, "\n")
+    }
+    else {
+      cat("\tcorrelation matrix: \n")
+      for (i in 1:5) {
+        cat("\t\t", corr[i, ], "\n")
+      }
+    }
+    cat("\tglobal optimal w: ", unlist(res[1, c('w1', 'w2', 'w3', 'w4', 'w5')]), "\n")
+    cat("\twith optimal disjunctive power: ", res[1, 'optimal_value'], "\n\n")
+  }
+}
+```
+
+
+## 6-hypothesis scenario
+
+### Define parameters
+
+```{r, 6_hypos_params}
+# Marginal powers
+mp.6.1 <- rep(0.9, 6)
+mp.6.2 <- rep(0.8, 6)
+mp.6.3 <- c(0.9, 0.8, 0.75, 0.7, 0.6, 0.4)
+mps.6 <- list(mp.6.1, mp.6.2, mp.6.3)
+n.mps.6 <- length(mps.6)
+
+# Correlations
+rho.6.1 <- 0.9
+rho.6.2 <- 0.8
+rho.6.3 <- 0.77
+rho.6.4 <- 0.7
+rho.6.5 <- 0.5
+Sigma.6.1 <- matrix(c(1, 0.9, 0.8, 0.7, 0.6, 0.5,
+                      0.9, 1, 0.8, 0.7, 0.6, 0.5,
+                      0.8, 0.8, 1, 0.7, 0.6, 0.5,
+                      0.7, 0.7, 0.7, 1, 0.6, 0.5,
+                      0.6, 0.6, 0.6, 0.6, 1, 0.5,
+                      0.5, 0.5, 0.5, 0.5, 0.5, 1), nrow=6)
+Sigma.6.2 <- matrix(c(1, 0.5, 0.5, 0.5, 0.5, 0.5,
+                      0.5, 1, 0.6, 0.6, 0.6, 0.6,
+                      0.5, 0.6, 1, 0.7, 0.7, 0.7,
+                      0.5, 0.6, 0.7, 1, 0.8, 0.8,
+                      0.5, 0.6, 0.7, 0.8, 1, 0.9,
+                      0.5, 0.6, 0.7, 0.8, 0.9, 1), nrow=6)
+corrs.6 <- list(rho.6.1, rho.6.2, rho.6.3, rho.6.4, rho.6.5,
+                Sigma.6.1, Sigma.6.2)
+n.corrs.6 <- length(corrs.6)
+```
+
+### w Optimization
+
+```{r, 6_hypos_optim}
+for (mp in mps.6) {
+  for (corr in corrs.6) {
+    start = Sys.time()
+    res <- go_optim_w_dp(alpha=0.025, mp=mp, rho=corr)
+    end = Sys.time()
+    print(end - start)
+    cat("\tmarginal power: ", mp, "\n")
+    if (length(corr) == 1) {
+      cat("\tcorrelation: ", corr, "\n")
+    }
+    else {
+      cat("\tcorrelation matrix: \n")
+      for (i in 1:5) {
+        cat("\t\t", corr[i, ], "\n")
+      }
+    }
+    cat("\tglobal optimal w: ", unlist(res[1, c('w1', 'w2', 'w3', 'w4', 'w5', 'w6')]), "\n")
+    cat("\twith optimal disjunctive power: ", res[1, 'optimal_value'], "\n\n")
+  }
+}
+```
