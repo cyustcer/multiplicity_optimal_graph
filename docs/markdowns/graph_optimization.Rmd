@@ -93,7 +93,7 @@ A = matrix(c(1, rho12, rho13,
              rho13, rho23, 1), nrow=3)
 
 # Incorporate correlation between primary and secondary hypothesis
-rho = 0.5
+rho = 0.25
 
 Sigma = rbind(cbind(A, A*rho), cbind(A*rho, A))
 ```

@@ -1,0 +1,295 @@
+---
+title: "main_content"
+output: pdf_document
+---
+
+In this document, we demonstrate the programming to reproduce the result we have in the main content. 
+
+```{r load_src, message=FALSE, warning=FALSE}
+library(parallel)
+source(here::here('src/optimization/w_optimization.R'))
+```
+
+```{r, utilty_function}
+
+```
+
+
+# Figure 1
+
+```{r}
+eq_mps <- list(rep(0.9, 3),
+               rep(0.8, 3),
+               rep(0.7, 3))
+grid_corr <- head(seq(0, 1, by = 0.001), -1)
+```
+
+```{r, eval = FALSE}
+#' This cell will run the global optimizer for 3000 times with
+#' parallel package, which might be time consuming if the number
+#' of core is small. So `eval` is set to FALSE by default, and 
+#' data from previous run will be loaded
+
+opt_disj_pow <- data.frame(
+  mp = numeric(),
+  corr = numeric(),
+  opt_disj = numeric(),
+  non_zero = numeric()
+)
+
+for (mp in eq_mps) {
+    res_list <- mclapply(grid_corr, function(x) 
+      go_optim_w_dp(alpha=0.025, mp=mp, rho=x))
+    optim_values <- unlist(lapply(res_list, function(x) x[1, "optimal_value"]))
+    non_zeros <- unlist(lapply(res_list, function(x) sum(x[1, c("w1", "w2", "w3")] != 0)))
+    opt_disj_pow <- opt_disj_pow %>% 
+      add_row(mp = mp[1],
+              corr = grid_corr,
+              opt_disj = optim_values,
+              non_zero = non_zeros)
+}
+```
+
+
+```{r}
+opt_disj_pow <- readRDS(here::here("data/dat_f1.rds"))
+
+ggplot(opt_disj_pow, aes(x=corr, y=opt_disj)) +
+  geom_line() +
+  facet_grid(rows=vars(mp), scales = "free")
+```
+
+# Table 1
+
+```{r}
+list_mp <- list(rep(0.9, 3),
+                rep(0.8, 3),
+                rep(0.7, 3),
+                c(0.9, 0.75, 0.6), 
+                c(0.9, 0.75, 0.3),
+                c(0.9, 0.75, 0.1),
+                c(0.9, 0.5, 0.5),
+                c(0.9, 0.1, 0.1))
+
+res_list <- mclapply(list_mp, function(x)
+  optim_w_dp(alpha=0.025, mp=x))
+
+opt_ws <- unlist(lapply(res_list, 
+                        function(x) paste0(round(x$w, 3), collapse = ", ")))
+opt_pows <- unlist(lapply(res_list,
+                          function(x) -x$optima$objective))
+mps <- unlist(lapply(list_mp,
+                     function(x) paste0(x, collapse = ", ")))
+
+
+opt_disj_ind_3 <- cbind(mp = mps,
+                        opt_w = opt_ws,
+                        opt_pow = round(opt_pows*100, 3))
+opt_disj_ind_3
+```
+
+# Table 2
+
+```{r}
+list_mp <- list(rep(0.9, 3),
+                rep(0.8, 3),
+                rep(0.7, 3))
+
+list_corr <- list(0.9, 0.78, 0.7, 0.5)
+list_para <- asplit(expand.grid(corr = list_corr, mp = list_mp), 1)
+
+res_list <- mclapply(list_para, 
+                     function(x)
+                       go_optim_w_dp(alpha=0.025, mp=x$mp, rho=x$corr))
+bhmk_list <- mclapply(list_para,
+                      function(x)
+                        disjunctive_power_corr(w=rep(1/3, 3), alpha=0.025,
+                                               mp=x$mp, rho=x$corr))
+
+mps <- unlist(lapply(list_para,
+                     function(x) paste0(x$mp, collapse = ", ")))
+corrs <- unlist(lapply(list_para,
+                       function(x) paste0(x$corr, collapse = ", ")))
+opt_ws <- unlist(lapply(res_list,
+                        function(x) paste0(round(x[1, c("w1", "w2", "w3")], 3), collapse = ", ")))
+opt_pows <- unlist(lapply(res_list,
+                          function(x)
+                            x[1, "optimal_value"]))
+
+opt_disj_dep_eq <- rbind(cbind(mp = mps,
+                               corr = corrs,
+                               opt_w = opt_ws,
+                               disj_pow = round(opt_pows * 100, 3)),
+                         cbind(mp = mps,
+                               corr = corrs,
+                               w = "1/3, 1/3, 1/3",
+                               disj_pow = round(unlist(bhmk_list) * 100, 3)
+                               )
+                         ) %>% 
+  as.data.frame() %>% 
+  arrange(desc(mp), desc(corr))
+opt_disj_dep_eq
+```
+
+# Table 3
+
+```{r}
+list_mp <- list(c(0.9, 0.75, 0.6),
+                c(0.9, 0.75, 0.3),
+                c(0.9, 0.5, 0.5))
+
+list_corr <- list(0.8, 
+                  0.4,
+                  matrix(c(1, 0.8, 0.4,
+                           0.8, 1, 0.2,
+                           0.4, 0.2, 1), nrow=3),
+                  matrix(c(1, 0.2, 0.4,
+                           0.2, 1, 0.8,
+                           0.4, 0.8, 1), nrow=3))
+
+list_para <- asplit(expand.grid(corr = list_corr, mp = list_mp), 1)
+
+res_list <- mclapply(list_para, 
+                     function(x)
+                       go_optim_w_dp(alpha=0.025, mp=x$mp, rho=x$corr))
+
+bhmk_list <- mclapply(list_para,
+                      function(x) {
+                        bhmk_w = optim_w_dp(alpha=0.025, mp=x$mp)$w
+                        bhmk_pow = disjunctive_power_corr(w=bhmk_w, alpha=0.025,
+                                                          mp=x$mp, rho=x$corr)
+                        list(w = bhmk_w, pow = bhmk_pow)
+                        }
+                      )
+
+mps <- unlist(lapply(list_para,
+                     function(x) paste0(x$mp, collapse = ", ")))
+corrs <- unlist(lapply(list_para,
+                       function(x) {
+                         if (length(x$corr) == 1) {
+                           paste0(rep(x$corr, 3), collapse = ", ")
+                         }
+                         else {
+                           paste0(c(x$corr[1, 2], x$corr[1, 3], x$corr[2, 3]), collapse = ", ")
+                         }
+                       }
+                       ))
+opt_ws <- unlist(lapply(res_list,
+                        function(x) paste0(round(x[1, c("w1", "w2", "w3")], 3), collapse = ", ")))
+bhmk_ws <- unlist(lapply(bhmk_list,
+                         function(x) paste0(round(x$w, 3), collapse = ", ")))
+bhmk_pow <- unlist(lapply(bhmk_list,
+                          function(x) x$pow))
+opt_pows <- unlist(lapply(res_list,
+                          function(x)
+                            x[1, "optimal_value"]))
+
+opt_disj_dep_uneq <- rbind(cbind(mp = mps,
+                                 corr = corrs,
+                                 opt_w = opt_ws,
+                                 disj_pow = round(opt_pows * 100, 3)),
+                           cbind(mp = mps,
+                                 corr = corrs,
+                                 w = bhmk_ws,
+                                 disj_pow = round(bhmk_pow * 100, 3))) %>% 
+  as.data.frame() %>% 
+  arrange(desc(mp), desc(corr))
+opt_disj_dep_uneq
+```
+
+
+# Table 4
+
+```{r}
+list_mp <- list(rep(0.9, 3),
+                rep(0.8, 3),
+                rep(0.7, 3),
+                c(0.9, 0.75, 0.6), 
+                c(0.9, 0.75, 0.3),
+                c(0.9, 0.75, 0.1),
+                c(0.9, 0.5, 0.5),
+                c(0.9, 0.1, 0.1))
+
+res_list <- mclapply(list_mp, function(x)
+  optim_w_cp(alpha=0.025, mp=x))
+
+opt_ws <- unlist(lapply(res_list, 
+                        function(x) paste0(round(x$w, 3), collapse = ", ")))
+opt_pows <- unlist(lapply(res_list,
+                          function(x) -x$optima$objective))
+mps <- unlist(lapply(list_mp,
+                     function(x) paste0(x, collapse = ", ")))
+
+
+opt_conj_ind_3 <- cbind(mp = mps,
+                        opt_w = opt_ws,
+                        opt_pow = round(opt_pows*100, 3))
+opt_conj_ind_3
+```
+
+
+# Table 5
+
+```{r}
+list_mp <- list(c(0.9, 0.75, 0.6),
+                c(0.9, 0.75, 0.3),
+                c(0.9, 0.5, 0.5))
+
+list_corr <- list(0.8, 
+                  0.4,
+                  matrix(c(1, 0.8, 0.4,
+                           0.8, 1, 0.2,
+                           0.4, 0.2, 1), nrow=3),
+                  matrix(c(1, 0.2, 0.4,
+                           0.2, 1, 0.8,
+                           0.4, 0.8, 1), nrow=3))
+
+list_para <- asplit(expand.grid(corr = list_corr, mp = list_mp), 1)
+
+res_list <- mclapply(list_para, 
+                     function(x)
+                       optim_w_cp(alpha=0.025, mp=x$mp, rho=x$corr))
+
+bhmk_list <- mclapply(list_para,
+                      function(x) {
+                        bhmk_w = optim_w_cp(alpha=0.025, mp=x$mp)$w
+                        bhmk_pow = conjunctive_power_corr(w=bhmk_w, alpha=0.025,
+                                                          mp=x$mp, rho=x$corr)
+                        list(w = bhmk_w, pow = bhmk_pow)
+                        }
+                      )
+
+mps <- unlist(lapply(list_para,
+                     function(x) paste0(x$mp, collapse = ", ")))
+corrs <- unlist(lapply(list_para,
+                       function(x) {
+                         if (length(x$corr) == 1) {
+                           paste0(rep(x$corr, 3), collapse = ", ")
+                         }
+                         else {
+                           paste0(c(x$corr[1, 2], x$corr[1, 3], x$corr[2, 3]), collapse = ", ")
+                         }
+                       }
+                       ))
+opt_ws <- unlist(lapply(res_list,
+                        function(x) paste0(round(x$w, 3), collapse = ", ")))
+opt_pows <- unlist(lapply(res_list,
+                          function(x)
+                            -x$optima$objective))
+bhmk_ws <- unlist(lapply(bhmk_list,
+                         function(x) paste0(round(x$w, 3), collapse = ", ")))
+bhmk_pow <- unlist(lapply(bhmk_list,
+                          function(x) x$pow))
+
+opt_conj_dep_uneq <- rbind(cbind(mp = mps,
+                                 corr = corrs,
+                                 opt_w = opt_ws,
+                                 conj_pow = round(opt_pows * 100, 3)),
+                           cbind(mp = mps,
+                                 corr = corrs,
+                                 w = bhmk_ws,
+                                 conj_pow = round(bhmk_pow * 100, 3))) %>% 
+  as.data.frame() %>% 
+  arrange(desc(mp), desc(corr))
+opt_conj_dep_uneq
+```
