@@ -1,7 +1,7 @@
 library(mvtnorm)
 library(tidyverse)
 library(nloptr)
-source("src/utils/misc.R")
+source(here::here("src/utils/misc.R"))
 
 
 #' A function

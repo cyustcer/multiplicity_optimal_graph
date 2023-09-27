@@ -1,4 +1,4 @@
-source('src/utils/misc.R')
+source(here::here('src/utils/misc.R'))
 
 
 #' A function to transfer single correlation to matrix

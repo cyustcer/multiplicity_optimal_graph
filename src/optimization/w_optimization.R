@@ -1,7 +1,7 @@
-source('src/objectives/independent_disjunctive_power.R')
-source('src/objectives/correlated_disjunctive_power.R')
-source('src/objectives/correlated_conjunctive_power.R')
-source('src/utils/tools.R')
+source(here::here('src/objectives/independent_disjunctive_power.R'))
+source(here::here('src/objectives/correlated_disjunctive_power.R'))
+source(here::here('src/objectives/correlated_conjunctive_power.R'))
+source(here::here('src/utils/tools.R'))
 
 
 opts <- list("algorithm" = "NLOPT_LD_SLSQP",

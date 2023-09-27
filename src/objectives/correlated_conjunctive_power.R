@@ -1,4 +1,4 @@
-source('src/utils/misc.R')
+source(here::here('src/utils/misc.R'))
 
 cpc <- function(mus, Sigma, alphas) {
   zs = c()
