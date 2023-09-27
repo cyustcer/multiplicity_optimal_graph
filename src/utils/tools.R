@@ -106,10 +106,12 @@ adjust_initial_ws <- function(initial.ws, lb, ub) {
         to_remove = c(to_remove, i)
       }
       else {
-        initial.ws[i, initial.ws[i, ] < lb] = lb[initial.ws[i, ] < lb]
-        remain.ws <- 1 - sum(initial.ws[i, initial.ws[i, ] == lb])
-        to_modify = initial.ws[i, ] != lb & initial.ws[i, ] != 0
-        initial.ws[i, to_modify] = remain.ws / sum(to_modify)
+        while(any(initial.ws[i, ] < lb)) {
+          initial.ws[i, initial.ws[i, ] < lb] = lb[initial.ws[i, ] < lb]
+          remain.ws <- 1 - sum(initial.ws[i, initial.ws[i, ] == lb])
+          to_modify = initial.ws[i, ] != lb & initial.ws[i, ] != 0
+          initial.ws[i, to_modify] = remain.ws / sum(to_modify)
+        }
       }
     }
   }
