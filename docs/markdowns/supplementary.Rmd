@@ -1,0 +1,434 @@
+---
+title: "Supplementary"
+output:
+  pdf_document:
+    number_sections: true
+---
+
+In this document, we demonstrate the programming to reproduce the result we have in the supplementary material. 
+
+```{r load_src, message=FALSE, warning=FALSE}
+source(here::here('src/optimization/w_optimization.R'))
+```
+
+```{r utility, include=FALSE}
+
+```
+
+# Optimal Bonferroni weights table
+
+In this section, we provide two tables of optimal $\alpha_1$ under different marginal powers regarding to maximize disjunctive and conjunctive power of two independent hypotheses.
+
+```{r two_weight_table}
+alpha = 0.025
+mp_1 <- mp_2 <- seq(0.95, 0.5, by = -0.05)
+opt_alpha_disj <- data.frame(matrix(nrow = length(mp_1), 
+                                    ncol = length(mp_2)),
+                             row.names = mp_1)
+colnames(opt_alpha_disj) <- mp_2
+opt_alpha_conj <- opt_alpha_disj
+
+for (p1 in mp_1) {
+  for (p2 in mp_2) {
+    opt_alpha_disj[as.character(p1), 
+                   as.character(p2)] = optim_w_dp(alpha = alpha,
+                                                  mp = c(p1, p2))$w[1]
+    opt_alpha_conj[as.character(p1), 
+                   as.character(p2)] = optim_w_cp(alpha = alpha,
+                                                  mp = c(p1, p2))$w[1]
+  }
+}
+```
+
+
+```{r table_1, echo=FALSE}
+cap1 <- "Optimal Bonferroni weights table for disjunctive power"
+knitr::kable(opt_alpha_disj, 
+             digits = 3,
+             align = "l",
+             caption = cap1) %>%
+  kableExtra::kable_styling("striped", full_width = F)
+```
+
+
+```{r table_2, echo=FALSE}
+cap2 <- "Optimal Bonferroni weights table for conjunctive power"
+knitr::kable(opt_alpha_conj, 
+             digits = 3,
+             align = "l",
+             caption = cap2) %>%
+  kableExtra::kable_styling("striped", full_width = F)
+```
+
+\newpage
+
+# Optimal $\alpha$ splitting under different correlation
+
+In this section, we illustrate how correlation affect the disjunctive/conjunctive power in the two hypotheses scenario.
+
+```{r alpha_equal}
+mp2_eq <- c(0.9, 0.9)
+corr2s <- list(disj = c(0., 0.25, 0.5, 0.815, 0.9),
+               conj = c(0., 0.25, 0.5, 0.75, 0.99))
+ws <- seq(0, 1, by=0.01)
+disj_pow_eq <- data.frame(matrix(ncol=6, nrow=length(ws)))
+colnames(disj_pow_eq) <- c("w1", corr2s$disj)
+disj_pow_eq['w1'] = ws
+conj_pow_eq <- data.frame(matrix(ncol=6, nrow=length(ws)))
+colnames(conj_pow_eq) <- c("w1", corr2s$conj)
+conj_pow_eq['w1'] = ws
+
+for (i in 1:5) {
+  dps = c()
+  cps = c()
+  for (w in ws) {
+    dps = c(dps, disjunctive_power_corr(c(w, 1-w),
+                                        alpha = alpha,
+                                        mp = mp2_eq,
+                                        rho = corr2s$disj[i]))
+    cps = c(cps, conjunctive_power_corr(c(w, 1-w),
+                                        alpha = alpha,
+                                        mp = mp2_eq,
+                                        rho = corr2s$conj[i]))
+  }
+  disj_pow_eq[i+1] = dps
+  conj_pow_eq[i+1] = cps
+}
+
+df_disj_eq = reshape2::melt(disj_pow_eq, id.vars='w1', variable.name='correlation')
+names(df_disj_eq)[3] <- "disjunctive.power"
+df_conj_eq = reshape2::melt(conj_pow_eq, id.vars='w1', variable.name='correlation')
+names(df_conj_eq)[3] <- "conjunctive.power"
+
+opt_disj_eq <- data.frame()
+opt_conj_eq <- data.frame()
+for (i in 1:5) {
+  opt_disj_eq <- rbind(opt_disj_eq,
+                       df_disj_eq %>% 
+                         filter(correlation == corr2s$disj[i]) %>% 
+                         slice_max(disjunctive.power))
+  opt_conj_eq <- rbind(opt_conj_eq,
+                       df_conj_eq %>% 
+                         filter(correlation == corr2s$conj[i]) %>% 
+                         slice_max(conjunctive.power))
+}
+
+dp.corr <- ggplot(df_disj_eq, aes(w1, disjunctive.power)) +
+  geom_line(aes(lty = correlation), size=1) +
+  labs(x = expression(w[1]), y = "disjunctive power") +
+  theme(text = element_text(size=15)) +
+  geom_point(aes(x=w1, y=disjunctive.power, colour = "Optima"), 
+             data = opt_disj_eq, 
+             shape=17, size=3) +
+  scale_colour_manual(name="Optima",
+                      labels = c("Optima"),
+                      values=c("black"))
+
+cp.corr <- ggplot(df_conj_eq, aes(w1, conjunctive.power)) +
+  geom_line(aes(lty = correlation), size=1) +
+  labs(x = expression(w[1]), y = "conjunctive power") +
+  theme(text = element_text(size=15)) +
+  geom_point(aes(x=w1, y=conjunctive.power, colour = "Optima"), 
+             data = opt_conj_eq, 
+             shape=17, size=3) +
+  scale_colour_manual(name="Optima",
+                      labels = c("Optima"),
+                      values=c("black"))
+
+```
+
+```{r fig_1, echo = FALSE, fig.cap = "Disjunctive power of two hypotheses with equal marginal power of 90% under different $w_1$"}
+dp.corr
+```
+
+```{r fig_2, echo = FALSE, fig.cap = "Conjunctive power of two hypotheses with equal marginal power of 90% under different $w_1$"}
+cp.corr
+```
+
+
+```{r alpha_unequal}
+mp2_uneq <- c(0.9, 0.7)
+corr2s <- list(disj = c(0., 0.25, 0.5, 0.815, 0.9),
+               conj = c(0., 0.25, 0.5, 0.75, 0.99))
+ws <- seq(0, 1, by=0.01)
+disj_pow_uneq <- data.frame(matrix(ncol=6, nrow=length(ws)))
+colnames(disj_pow_uneq) <- c("w1", corr2s$disj)
+disj_pow_uneq['w1'] = ws
+conj_pow_uneq <- data.frame(matrix(ncol=6, nrow=length(ws)))
+colnames(conj_pow_uneq) <- c("w1", corr2s$conj)
+conj_pow_uneq['w1'] = ws
+
+for (i in 1:5) {
+  dps = c()
+  cps = c()
+  for (w in ws) {
+    dps = c(dps, disjunctive_power_corr(c(w, 1-w),
+                                        alpha = alpha,
+                                        mp = mp2_uneq,
+                                        rho = corr2s$disj[i]))
+    cps = c(cps, conjunctive_power_corr(c(w, 1-w),
+                                        alpha = alpha,
+                                        mp = mp2_uneq,
+                                        rho = corr2s$conj[i]))
+  }
+  disj_pow_uneq[i+1] = dps
+  conj_pow_uneq[i+1] = cps
+}
+
+df_disj_uneq = reshape2::melt(disj_pow_uneq, id.vars='w1', variable.name='correlation')
+names(df_disj_uneq)[3] <- "disjunctive.power"
+df_conj_uneq = reshape2::melt(conj_pow_uneq, id.vars='w1', variable.name='correlation')
+names(df_conj_uneq)[3] <- "conjunctive.power"
+
+opt_disj_uneq <- data.frame()
+opt_conj_uneq <- data.frame()
+for (i in 1:5) {
+  opt_disj_uneq <- rbind(opt_disj_uneq,
+                         df_disj_uneq %>% 
+                           filter(correlation == corr2s$disj[i]) %>% 
+                           slice_max(disjunctive.power))
+  opt_conj_uneq <- rbind(opt_conj_uneq,
+                         df_conj_uneq %>% 
+                           filter(correlation == corr2s$conj[i]) %>% 
+                           slice_max(conjunctive.power))
+}
+
+dp.corr.uneq <- ggplot(df_disj_uneq, aes(w1, disjunctive.power)) +
+  geom_line(aes(lty = correlation), size=1) +
+  labs(x = expression(w[1]), y = "disjunctive power") +
+  theme(text = element_text(size=15)) +
+  geom_point(aes(x=w1, y=disjunctive.power, colour = "Optima"), 
+             data = opt_disj_uneq, 
+             shape=17, size=3) +
+  scale_colour_manual(name="Optima",
+                      labels = c("Optima"),
+                      values=c("black"))
+
+cp.corr.uneq <- ggplot(df_conj_uneq, aes(w1, conjunctive.power)) +
+  geom_line(aes(lty = correlation), size=1) +
+  labs(x = expression(w[1]), y = "conjunctive power") +
+  theme(text = element_text(size=15)) +
+  geom_point(aes(x=w1, y=conjunctive.power, colour = "Optima"), 
+             data = opt_conj_uneq, 
+             shape=17, size=3) +
+  scale_colour_manual(name="Optima",
+                      labels = c("Optima"),
+                      values=c("black"))
+
+```
+
+```{r fig_3, echo = FALSE, fig.cap = "Disjunctive power of two hypotheses with unequal marginal power of 90% under different $w_1$"}
+dp.corr.uneq
+```
+
+```{r fig_4, echo = FALSE, fig.cap = "Conjunctive power of two hypotheses with unequal marginal power of 90% under different $w_1$"}
+cp.corr.uneq
+```
+
+\newpage
+
+# Optimal Bonferroni weights for disjunctive power with four hypotheses
+
+```{r four_hypo}
+mps4 <- list(rep(0.9, 4),
+             rep(0.8, 4),
+             c(0.9, 0.8, 0.7, 0.6),
+             c(0.9, 0.75, 0.6, 0.45),
+             c(0.9, 0.7, 0.5, 0.1),
+             c(0.9, 0.5, 0.5, 0.5),
+             c(0.9, 0.1, 0.1, 0.1))
+
+opt_disj <- data.frame(marginal_power = character(),
+                       w1 = numeric(),
+                       w2 = numeric(),
+                       w3 = numeric(),
+                       w4 = numeric(),
+                       disjunctive_power = numeric())
+
+opt_conj <- data.frame(marginal_power = character(),
+                       w1 = numeric(),
+                       w2 = numeric(),
+                       w3 = numeric(),
+                       w4 = numeric(),
+                       conjunctive_power = numeric())
+
+for (mp in mps4) {
+  indopt_dp <- optim_w_dp(alpha = alpha,
+                          mp = mp)
+  indopt_cp <- optim_w_cp(alpha = alpha,
+                          mp = mp)
+  opt_disj <- opt_disj %>% 
+    add_row(marginal_power = paste(mp, collapse = ", "),
+            w1 = indopt_dp$w[1],
+            w2 = indopt_dp$w[2],
+            w3 = indopt_dp$w[3],
+            w4 = indopt_dp$w[4],
+            disjunctive_power = -indopt_dp$optima$objective * 100)
+  opt_conj <- opt_conj %>% 
+    add_row(marginal_power = paste(mp, collapse = ", "),
+            w1 = indopt_cp$w[1],
+            w2 = indopt_cp$w[2],
+            w3 = indopt_cp$w[3],
+            w4 = indopt_cp$w[4],
+            conjunctive_power = -indopt_cp$optima$objective * 100)
+}
+```
+
+
+```{r table_dp_ind, echo = FALSE, warning = FALSE}
+cap4 <- "Optimal Bonferroni weights to maximize the disjunctive power with four independent hypotheses"
+knitr::kable(opt_disj, 
+             format = "pipe",
+             digits = 3,
+             align = "r",
+             caption = cap4,
+             col.names = c("marginal power",
+                           "$w_1$",
+                           "$w_2$",
+                           "$w_3$",
+                           "$w_4$",
+                           "disjunctive power($\\%$)")) %>%
+  kableExtra::kable_styling("striped", full_width = F)
+```
+
+```{r table_cp_ind, echo = FALSE, warning = FALSE}
+cap4 <- "Optimal Bonferroni weights to maximize the conjunctive power with four independent hypotheses"
+knitr::kable(opt_conj, 
+             format = "pipe",
+             digits = 3,
+             align = "r",
+             caption = cap4,
+             col.names = c("marginal power",
+                           "$w_1$",
+                           "$w_2$",
+                           "$w_3$",
+                           "$w_4$",
+                           "conjunctive power($\\%$)")) %>%
+  kableExtra::kable_styling("striped", full_width = F)
+```
+
+This table could take more than 10 mins to run, please add `eval = FALSE` on the header of following two cells to skip this table.
+
+```{r four_hypo_dependence, eval = TRUE}
+mp4_1 <- rep(0.9, 4)
+mp4_2 <- rep(0.8, 4)
+mp4_3 <- c(0.9, 0.75, 0.6, 0.45)
+rhos <- c(0.9, 0.8, 0.77, 0.7, 0.5)
+sigma1 <- matrix(c(1, 0.8, 0.6, 0.4,
+                   0.8, 1, 0.6, 0.4,
+                   0.6, 0.6, 1, 0.4,
+                   0.4, 0.4, 0.4, 1), nrow = 4)
+sigma2 <- matrix(c(1, 0.9, 0.1, 0.4,
+                   0.9, 1, 0.1, 0.4,
+                   0.1, 0.1, 1, 0.4,
+                   0.4, 0.4, 0.4, 1), nrow = 4)
+mp4 <- list(mp4_1, mp4_2, mp4_3)
+corr <- c(as.list(rhos), list(sigma1, sigma2))
+corr <- setNames(corr, c(rhos, "$\\Sigma_1$", "$\\Sigma_2$"))
+
+opt_disj_corr <- data.frame(marginal_power = character(),
+                            correlation = character(),
+                            w1 = numeric(),
+                            w2 = numeric(),
+                            w3 = numeric(),
+                            w4 = numeric(),
+                            disjunctive_power = numeric())
+
+opt_conj_corr <- data.frame(marginal_power = character(),
+                            correlation = character(),
+                            w1 = numeric(),
+                            w2 = numeric(),
+                            w3 = numeric(),
+                            w4 = numeric(),
+                            conjunctive_power = numeric())
+
+for (mp in mp4) {
+  for (rho in names(corr)) {
+    locopt <- optim_w_dp(alpha = alpha,
+                         mp = mp)
+    glopt <- go_optim_w_dp(alpha = alpha,
+                           mp = mp,
+                           rho = corr[[rho]])
+    benchmark <- disjunctive_power_corr(w = locopt$w,
+                                        alpha = alpha,
+                                        mp = mp, rho = corr[[rho]])
+    opt_disj_corr <- opt_disj_corr %>% 
+      add_row(marginal_power = paste(mp, collapse = ", "),
+              correlation = as.character(rho),
+              w1 = glopt[1, ]$w1,
+              w2 = glopt[1, ]$w2,
+              w3 = glopt[1, ]$w3,
+              w4 = glopt[1, ]$w4,
+              disjunctive_power = glopt[1, ]$optimal_value * 100)
+    opt_disj_corr <- opt_disj_corr %>% 
+      add_row(marginal_power = paste(mp, collapse = ", "),
+              correlation = "Benchmark",
+              w1 = locopt$w[1],
+              w2 = locopt$w[2],
+              w3 = locopt$w[3],
+              w4 = locopt$w[4],
+              disjunctive_power = benchmark * 100)
+    
+    locopt <- optim_w_cp(alpha = alpha,
+                         mp = mp)
+    glopt <- optim_w_cp(alpha = alpha,
+                        mp = mp,
+                        rho = corr[[rho]])
+    benchmark <- conjunctive_power_corr(w = locopt$w,
+                                        alpha = alpha,
+                                        mp = mp, rho = corr[[rho]])
+    opt_conj_corr <- opt_conj_corr %>% 
+      add_row(marginal_power = paste(mp, collapse = ", "),
+              correlation = as.character(rho),
+              w1 = glopt$w[1],
+              w2 = glopt$w[2],
+              w3 = glopt$w[3],
+              w4 = glopt$w[4],
+              conjunctive_power = -glopt$optima$objective * 100)
+    opt_conj_corr <- opt_conj_corr %>% 
+      add_row(marginal_power = paste(mp, collapse = ", "),
+              correlation = "Benchmark",
+              w1 = locopt$w[1],
+              w2 = locopt$w[2],
+              w3 = locopt$w[3],
+              w4 = locopt$w[4],
+              conjunctive_power = benchmark * 100)
+    
+  }
+}
+```
+
+
+```{r table_4, echo = FALSE, warning = FALSE, eval = TRUE}
+cap4 <- "Optimal Bonferroni weights to maximize the disjunctive power with four hypotheses under dependence"
+knitr::kable(opt_disj_corr, 
+             format = "pipe",
+             digits = 3,
+             align = "r",
+             caption = cap4,
+             col.names = c("marginal power",
+                           "correlation",
+                           "$w_1$",
+                           "$w_2$",
+                           "$w_3$",
+                           "$w_4$",
+                           "disjunctive power($\\%$)")) %>%
+  kableExtra::kable_styling("striped", full_width = F)
+```
+
+```{r table_cp, echo = FALSE, warning = FALSE, eval = TRUE}
+cap4 <- "Optimal Bonferroni weights to maximize the conjunctive power with four hypotheses under dependence"
+knitr::kable(opt_conj_corr, 
+             format = "pipe",
+             digits = 3,
+             align = "r",
+             caption = cap4,
+             col.names = c("marginal power",
+                           "correlation",
+                           "$w_1$",
+                           "$w_2$",
+                           "$w_3$",
+                           "$w_4$",
+                           "conjunctive power($\\%$)")) %>%
+  kableExtra::kable_styling("striped", full_width = F)
+```

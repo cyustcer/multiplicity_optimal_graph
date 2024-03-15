@@ -2,7 +2,7 @@ inverse_Mills <- function(x) {
   return(dnorm(x)/pnorm(x))
 }
 
-weight_ratio <- function(w, p, alpha) {
+weight_ratio_dp <- function(w, p, alpha) {
   eta = solve_eta(alpha, p)
   mills_ratio = inverse_Mills(qnorm(1-w*alpha)-eta)
   ratio = 1/mills_ratio*dnorm(qnorm(1-w*alpha))
@@ -13,6 +13,38 @@ w = seq(0, 1, by=0.001)
 plot(w, weight_ratio(w, p=0.14, alpha=0.1))
 points(w, weight_ratio(w, p=0.8, alpha=0.025))
 
+weights_ratio_dp <- function(w, mp, alpha) {
+  ratios = c()
+  n = length(w)
+  for (i in 1:n) {
+    ratio = weight_ratio_dp(w[i], mp[i], alpha)
+    ratios = c(ratios, ratio)
+  }
+  return(ratios)
+}
+
+weight_ratio_cp <- function(w, p, alpha) {
+  eta = solve_eta(alpha, p)
+  di = 1 - pnorm(qnorm(1 - w * alpha) - eta)
+  di_prime = dnorm(qnorm(1 - w * alpha)) /
+    dnorm(qnorm(1 - w * alpha) - eta)
+  di * di_prime
+}
+
+weights_ratio_cp <- function(w, mp, alpha) {
+  ratios = c()
+  n = length(w)
+  for (i in 1:n) {
+    ratio = weight_ratio_cp(w[i], mp[i], alpha)
+    ratios = c(ratios, ratio)
+  }
+  return(ratios)
+}
+
+w = seq(0, 1, by=0.001)
+plot(w, weight_ratio_cp(w, p=0.4, alpha=0.025))
+# plot(w, weight_ratio_cp(w, p=0.8, alpha=0.025))
+
 weights_ratio <- function(w, mp, alpha) {
   ratios = c()
   n = length(w)
@@ -22,6 +54,7 @@ weights_ratio <- function(w, mp, alpha) {
   }
   return(ratios)
 }
+
 
 test <- function(w, p, alpha) {
   # C = solve_eta(alpha, p)
